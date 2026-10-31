@@ -1,5 +1,11 @@
 # Mettere le Iscrizioni sul server dello studio
 
+> **Stato: FATTO il 31/10/2026.** `https://iscrizioni.clerm.it` è in
+> funzione. Questo documento resta come registro di quello che è stato
+> fatto e come guida per rifarlo (altra manifestazione, altro programma,
+> reinstallazione). I passi sono già corretti degli inciampi incontrati
+> la prima volta.
+
 Istruzioni per pubblicare il programma su **`https://iscrizioni.clerm.it`**,
 seguendo la stessa forma degli altri programmi già in funzione sul server.
 
@@ -72,12 +78,20 @@ ssh piero@192.168.1.76
 **2.1 La cartella del codice**
 
 ```bash
-sudo mkdir -p /srv/app/iscrizioni
+mkdir -p /srv/app/iscrizioni
 ```
 
 ```bash
-sudo git clone https://github.com/TUONOME/proloco-iscrizioni.git /srv/app/iscrizioni/prod
+git clone git@github-iscrizioni:rosarioligammari-jpg/proloco-iscrizioni.git /srv/app/iscrizioni/prod
 ```
+
+```bash
+git clone git@github-iscrizioni:rosarioligammari-jpg/proloco-iscrizioni.git /srv/app/iscrizioni/test
+```
+
+> `/srv/app` appartiene all'utente `piero`: qui **`sudo` non serve**, e non
+> va usato, altrimenti le cartelle nascono di `root` e il comando
+> `aggiorna` (che lavora come `piero`) non riesce più a scaricare.
 
 **2.2 La cartella dei dati, con i permessi giusti**
 
@@ -86,18 +100,26 @@ gli altri: la cartella dei dati deve essere sua, altrimenti non può
 scriverci.
 
 ```bash
-sudo mkdir -p /srv/app-dati/iscrizioni/prod /srv/app-dati/iscrizioni/test
+mkdir -p /srv/app-dati/iscrizioni/prod /srv/app-dati/iscrizioni/test
 ```
 
 ```bash
-sudo chown -R 10001:10001 /srv/app-dati/iscrizioni
+ssh -t piero@192.168.1.76 "sudo chown -R 10001:10001 /srv/app-dati/iscrizioni"
 ```
+
+> Questo **sì** vuole `sudo`, ed è l'unico passo di tutta l'installazione
+> che lo richiede per i file. Se lo si lancia da remoto serve l'opzione
+> **`-t`**, altrimenti `sudo` non riesce nemmeno a chiedere la password e
+> non fa niente in silenzio.
 
 **2.3 Accendere il programma vero**
 
 ```bash
-cd /srv/app/iscrizioni/prod && sudo docker compose -f deploy/prod.yml up -d --build
+cd /srv/app/iscrizioni/prod && docker compose -f deploy/prod.yml up -d --build
 ```
+
+> Anche qui niente `sudo`: su questo server l'utente `piero` usa `docker`
+> direttamente.
 
 La prima volta ci mette un paio di minuti (deve costruire il contenitore).
 Alla fine deve comparire `Container iscrizioni-reale  Started`.
@@ -117,7 +139,7 @@ Deve rispondere esattamente:
 **2.5 La copia di prova** (facoltativa, ma è la vostra abitudine)
 
 ```bash
-cd /srv/app/iscrizioni/prod && sudo docker compose -f deploy/test.yml up -d --build
+cd /srv/app/iscrizioni/prod && docker compose -f deploy/test.yml up -d --build
 ```
 
 ```bash
@@ -142,9 +164,23 @@ Deve finire con `FATTO.` e stamparti il comando del passo seguente.
 
 **3.2 Registrare il nome nel DNS** (una volta sola)
 
+Questo comando va dato **senza `sudo`**, da utente `piero`:
+
 ```bash
-sudo cloudflared tunnel route dns d153afeb-11c8-45b5-9b94-574e36fffa67 iscrizioni.clerm.it
+cloudflared tunnel route dns d153afeb-11c8-45b5-9b94-574e36fffa67 iscrizioni.clerm.it
 ```
+
+> **Perché senza `sudo`.** Il certificato che autorizza le modifiche al DNS è
+> `~/.cloudflared/cert.pem`, cioè sta nella cartella personale di `piero`.
+> Con `sudo` il comando gira come `root`, cerca il certificato in
+> `/root/.cloudflared/`, non lo trova e **non crea niente** — senza che
+> l'errore salti all'occhio. Successo vero è una riga che dice
+> `Added CNAME iscrizioni.clerm.it`.
+
+Dopo, il nome può non funzionare subito **dai computer dell'ufficio**: il
+router si ricorda per qualche minuto che quel nome «non esisteva». Dal
+telefono con i dati invece funziona subito. Non c'è niente da fare, passa
+da sé.
 
 > Questo comando **crea un indirizzo pubblico visibile a chiunque**. Da quel
 > momento `https://iscrizioni.clerm.it` risponde a tutto il mondo. È quello
@@ -233,9 +269,18 @@ Ogni notte alle 2:15 fa una copia dell'archivio e tiene le ultime 30.
 
 ## Passo 6 — i controlli finali
 
-1. **La prima password.** Apri `https://iscrizioni.clerm.it/riservato/` e
-   scegli la password dell'area riservata. Fallo **subito**, prima che
-   l'indirizzo giri: finché non è impostata, la sceglie chiunque arrivi lì.
+1. **La prima password**, da mettere **prima** di aprire l'indirizzo al
+   pubblico (passo 3.2): finché non è impostata, la sceglie chiunque arrivi
+   su `/riservato/`. Si fa aprendo un passaggio temporaneo verso il server,
+   senza esporre niente:
+
+   ```bash
+   ssh -L 8113:127.0.0.1:8113 piero@192.168.1.76
+   ```
+
+   lasciando aperta quella finestra, e andando col browser su
+   `http://127.0.0.1:8113/riservato/`. Impostata la password, si chiude la
+   finestra con `exit`.
 2. **Le attività vere.** Dall'area riservata correggi le attività del Motor
    Village Fest, che adesso sono inventate.
 3. **Una prova vera** dal telefono: iscriviti, poi controlla che l'iscrizione

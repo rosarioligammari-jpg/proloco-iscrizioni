@@ -82,8 +82,13 @@ if [ "$GUASTI" -gt 0 ]; then
 fi
 
 echo
-echo "FATTO. Adesso manca il nome nel DNS di Cloudflare, una volta sola:"
-echo "   sudo cloudflared tunnel route dns \\"
+echo "FATTO. Adesso manca il nome nel DNS di Cloudflare, una volta sola."
+echo "ATTENZIONE: quel comando va dato SENZA sudo, come utente piero."
+echo "Il certificato che autorizza le modifiche al DNS sta in"
+echo "~/.cloudflared/cert.pem, cioe' nella cartella di piero: con sudo"
+echo "cloudflared lo cerca in quella di root, non lo trova e non fa niente."
+echo
+echo "   cloudflared tunnel route dns \\"
 echo "     d153afeb-11c8-45b5-9b94-574e36fffa67 $NOME"
 echo
 echo "Poi l'indirizzo pubblico sara':  https://$NOME"
