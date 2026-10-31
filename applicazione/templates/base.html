@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titolo %}{{ titolo_scheda }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='stile.css') }}">
+</head>
+<body>
+
+<header class="testata">
+  <div class="contenuto intestazione">
+    {% if file_logo %}
+      <img class="logo" src="{{ url_for('static', filename=file_logo) }}"
+           alt="{{ ente }}">
+    {% endif %}
+    <div class="intestazione-testo">
+      <p class="programma">{{ ente }}</p>
+      {% block testata %}{% endblock %}
+    </div>
+  </div>
+</header>
+
+<main class="contenuto">
+  {% with messaggi = get_flashed_messages(with_categories=true) %}
+    {% if messaggi %}
+      {% for genere, testo in messaggi %}
+        <div class="avviso {{ 'rosso' if genere == 'errore' else 'verde' }}">
+          <p>{{ testo }}</p>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block corpo %}{% endblock %}
+</main>
+
+<footer class="piede">
+  <div class="contenuto">
+    <p>{{ ente }}</p>
+  </div>
+</footer>
+
+{% block fondo_pagina %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,32 @@
+{# Elenco delle attivita' senza modulo: si usa quando le iscrizioni sono chiuse. #}
+<ul class="elenco-attivita sola-lettura">
+  {% for a in attivita %}
+    <li class="voce-attivita {% if a.al_completo %}completo{% endif %}">
+      <span class="testo-attivita">
+        <span class="nome-attivita">{{ a.nome }}</span>
+        <span class="dettaglio-attivita">
+          {% if a.giorno %}{{ a.giorno|data_italiana }}{% endif %}
+          {% if a.ora_inizio %}· ore {{ a.ora_inizio }}{% endif %}
+          {% if a.quota_centesimi %}· quota {{ a.quota_centesimi|euro }}{% else %}· gratuito{% endif %}
+        </span>
+        {% if a.descrizione %}
+          <span class="descrizione-attivita">{{ a.descrizione }}</span>
+        {% endif %}
+        <span class="posti
+          {%- if a.posti is none %} senza-limite
+          {%- elif a.al_completo %} rosso
+          {%- else %} verde{% endif %}">
+          {% if a.posti is none %}
+            iscritti: {{ a.occupati }}
+          {% elif a.al_completo %}
+            al completo ({{ a.posti }} posti)
+          {% else %}
+            iscritti: {{ a.occupati }} su {{ a.posti }}
+          {% endif %}
+        </span>
+      </span>
+    </li>
+  {% else %}
+    <li class="voce-attivita"><p>Nessuna attività inserita.</p></li>
+  {% endfor %}
+</ul>

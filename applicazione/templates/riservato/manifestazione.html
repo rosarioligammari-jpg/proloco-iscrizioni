@@ -1,0 +1,243 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}{{ m.nome }} · Area riservata{% endblock %}
+{% block titolo_pagina %}{{ m.nome }}{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <section class="scheda">
+    <h2>Quanti saremo</h2>
+    <ul class="numeri grandi">
+      <li><strong>{{ totali.persone }}</strong>
+        {{ 'persona' if totali.persone == 1 else 'persone' }}</li>
+      <li><strong>{{ totali.iscrizioni }}</strong>
+        {{ 'iscrizione' if totali.iscrizioni == 1 else 'iscrizioni' }}</li>
+      {% if totali.persone_solo_attesa %}
+        <li class="attesa"><strong>{{ totali.persone_solo_attesa }}</strong>
+          solo in lista d'attesa</li>
+      {% endif %}
+      {% if totali.incasso_centesimi %}
+        <li><strong>{{ totali.incasso_centesimi|euro_secco }}</strong>
+          di quote attese</li>
+      {% endif %}
+      {% if totali.annullate %}
+        <li class="annullata"><strong>{{ totali.annullate }}</strong>
+          {{ 'annullata' if totali.annullate == 1 else 'annullate' }}</li>
+      {% endif %}
+    </ul>
+    <p class="aiuto">«Quante persone» conta una volta sola chi si è iscritto
+      a più attività, e non conta chi è soltanto in lista d'attesa.</p>
+  </section>
+
+  <section class="scheda">
+    <h2>Il link da mandare nei gruppi</h2>
+    <p class="indirizzo"><code id="indirizzo-pubblico">{{ indirizzo_pubblico }}</code></p>
+    <p class="azioni-in-riga">
+      <button type="button" class="pulsante piccolo" id="copia-indirizzo">Copia il link</button>
+      <a class="pulsante piccolo secondario" href="{{ indirizzo_pubblico }}"
+         target="_blank" rel="noopener">Apri la pagina pubblica</a>
+    </p>
+    <p class="aiuto">Se mandi questo indirizzo fuori dalla rete dell'ufficio
+      non funzionerà finché il programma non sarà pubblicato su internet.</p>
+  </section>
+
+  <section class="scheda">
+    <h2>Iscrizioni</h2>
+    <p>
+      {% if m.iscrizioni_aperte %}
+        <span class="etichetta verde">Aperte</span>
+      {% else %}
+        <span class="etichetta arancione">Chiuse</span>
+      {% endif %}
+      {% if m.chiusura_iscrizioni %}
+        · si chiudono da sole il {{ m.chiusura_iscrizioni|data_italiana }}
+      {% endif %}
+    </p>
+    <p class="azioni-in-riga">
+      <form method="post" action="{{ url_for('riservato.apertura', numero=m.id) }}">
+        <button type="submit" class="pulsante piccolo {{ 'secondario' if m.iscrizioni_aperte }}">
+          {{ 'Chiudi le iscrizioni' if m.iscrizioni_aperte else 'Riapri le iscrizioni' }}</button>
+      </form>
+      <a class="pulsante piccolo secondario"
+         href="{{ url_for('riservato.modifica_manifestazione', numero=m.id) }}">Modifica i dati</a>
+      <form method="post" action="{{ url_for('riservato.duplica', numero=m.id) }}">
+        <button type="submit" class="pulsante piccolo secondario">Duplica per un'altra volta</button>
+      </form>
+    </p>
+  </section>
+
+  <section class="scheda">
+    <h2>Le attività</h2>
+
+    {% if attivita %}
+      <div class="tabella-scorrevole">
+        <table>
+          <thead>
+            <tr>
+              <th>Attività</th>
+              <th class="numero">Posti</th>
+              <th class="numero">Iscritti</th>
+              <th class="numero">Rimasti</th>
+              <th class="numero">In attesa</th>
+              <th class="numero">Quota</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in attivita %}
+              <tr class="{{ 'spenta' if not a.riga.attiva }}">
+                <td>
+                  <strong>{{ a.riga.nome }}</strong>
+                  {% if not a.riga.attiva %}
+                    <span class="etichetta arancione">sospesa</span>
+                  {% endif %}
+                  <span class="aiuto">
+                    {% if a.riga.giorno %}{{ a.riga.giorno|data_italiana }}{% endif %}
+                    {% if a.riga.ora_inizio %} · ore {{ a.riga.ora_inizio }}{% endif %}
+                  </span>
+                </td>
+                <td class="numero">{{ a.riga.posti if a.riga.posti is not none else '—' }}</td>
+                <td class="numero">{{ a.confermati }}</td>
+                <td class="numero">
+                  {% if a.rimasti is none %}—
+                  {% elif a.rimasti == 0 %}<span class="etichetta rosso-pieno">0</span>
+                  {% else %}{{ a.rimasti }}{% endif %}
+                </td>
+                <td class="numero">{{ a.in_attesa or '' }}</td>
+                <td class="numero">{{ a.riga.quota_centesimi|euro }}</td>
+                <td class="azioni-cella">
+                  <a href="{{ url_for('riservato.modifica_attivita', numero=a.id) }}">modifica</a>
+                  <form method="post" action="{{ url_for('riservato.sospendi_attivita', numero=a.id) }}">
+                    <button type="submit" class="collegamento">
+                      {{ 'riattiva' if not a.riga.attiva else 'sospendi' }}</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>Nessuna attività: finché non ne aggiungi almeno una, dalla pagina
+        pubblica non ci si può iscrivere.</p>
+    {% endif %}
+
+    <p class="azioni-in-riga">
+      <a class="pulsante piccolo"
+         href="{{ url_for('riservato.nuova_attivita', numero=m.id) }}">Aggiungi un'attività</a>
+    </p>
+  </section>
+
+  <section class="scheda">
+    <h2>Gli iscritti</h2>
+
+    {% if iscrizioni %}
+      <p class="azioni-in-riga">
+        <a class="pulsante piccolo secondario"
+           href="{{ url_for('riservato.esporta', numero=m.id) }}">Scarica l'elenco per Excel</a>
+      </p>
+
+      <ul class="elenco-iscritti">
+        {% for voce in iscrizioni %}
+          {% set i = voce.iscrizione %}
+          <li class="iscritto {{ 'annullato' if i.stato == 'annullata' }}">
+            <p class="riga-nome">
+              <strong>{{ i.cognome }} {{ i.nome }}</strong>
+              {% if i.tipo == 'gruppo' %}
+                — {{ i.gruppo_nome }},
+                <strong>{{ i.numero_persone|persone }}</strong>
+              {% endif %}
+              {% if i.stato == 'annullata' %}
+                <span class="etichetta arancione">annullata</span>
+              {% endif %}
+            </p>
+            <p class="aiuto">
+              {{ i.telefono }}{% if i.email %} · {{ i.email }}{% endif %}
+              · codice {{ i.codice_conferma }}
+              · inviata il {{ i.creata_il|data_ora_italiana }}
+            </p>
+
+            <ul class="righe-attivita">
+              {% for r in voce.righe %}
+                <li>
+                  {% if r.stato == 'attesa' %}
+                    <span class="etichetta arancione">in attesa</span>
+                  {% endif %}
+                  {{ r.nome }}
+                  <span class="aiuto">({{ r.persone|persone }}{% if r.quota_centesimi %},
+                    {{ (r.quota_centesimi * r.persone)|euro_secco }}{% endif %})</span>
+                  {% if i.stato != 'annullata' %}
+                    {% if r.stato == 'attesa' %}
+                      <form method="post" action="{{ url_for('riservato.conferma_riga', numero=r.id) }}">
+                        <button type="submit" class="collegamento">dagli il posto</button>
+                      </form>
+                    {% else %}
+                      <form method="post" action="{{ url_for('riservato.rimetti_in_attesa', numero=r.id) }}">
+                        <button type="submit" class="collegamento">metti in attesa</button>
+                      </form>
+                    {% endif %}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+
+            {% if i.nomi_partecipanti %}
+              <p class="aiuto prelinea"><strong>Partecipanti:</strong>
+                {{ i.nomi_partecipanti }}</p>
+            {% endif %}
+            {% if i.note %}
+              <p class="aiuto prelinea"><strong>Note:</strong> {{ i.note }}</p>
+            {% endif %}
+
+            <p class="riga-azioni">
+              {% if voce.quota_centesimi %}
+                <span class="etichetta">quota {{ voce.quota_centesimi|euro_secco }}</span>
+              {% endif %}
+              <form method="post" action="{{ url_for('riservato.annulla_iscrizione', numero=i.id) }}">
+                <button type="submit" class="collegamento">
+                  {{ 'rimetti fra le valide' if i.stato == 'annullata' else 'annulla' }}</button>
+              </form>
+            </p>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="aiuto">Un'iscrizione annullata non viene cancellata: resta in
+        archivio e si può rimettere fra le valide.</p>
+
+    {% else %}
+      <p>Ancora nessun iscritto.</p>
+    {% endif %}
+  </section>
+
+{% endblock %}
+
+{% block fondo_pagina %}
+<script>
+  (function () {
+    var pulsante = document.getElementById('copia-indirizzo');
+    var indirizzo = document.getElementById('indirizzo-pubblico');
+    if (!pulsante || !indirizzo) { return; }
+    pulsante.addEventListener('click', function () {
+      var testo = indirizzo.textContent.trim();
+      function fatto() {
+        pulsante.textContent = 'Copiato';
+        setTimeout(function () { pulsante.textContent = 'Copia il link'; }, 2500);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(testo).then(fatto, selezione);
+      } else {
+        selezione();
+      }
+      // Se il browser non lascia copiare, almeno si seleziona il testo.
+      function selezione() {
+        var intervallo = document.createRange();
+        intervallo.selectNodeContents(indirizzo);
+        var scelta = window.getSelection();
+        scelta.removeAllRanges();
+        scelta.addRange(intervallo);
+        pulsante.textContent = 'Selezionato: copia con Ctrl+C';
+      }
+    });
+  })();
+</script>
+{% endblock %}

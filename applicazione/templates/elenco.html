@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block titolo %}Manifestazioni · {{ titolo_scheda }}{% endblock %}
+
+{% block testata %}
+  <h1>Manifestazioni</h1>
+{% endblock %}
+
+{% block corpo %}
+
+  {% if manifestazioni %}
+    <ul class="elenco-manifestazioni">
+      {% for m in manifestazioni %}
+        {% set motivo = chiusa(m) %}
+        <li class="scheda">
+          <h2><a href="{{ url_for('pubblico.manifestazione', codice=m.codice) }}">{{ m.nome }}</a></h2>
+          {% if m.sottotitolo %}<p class="sottotitolo">{{ m.sottotitolo }}</p>{% endif %}
+          <p class="quando">
+            {% if m.data_inizio %}{{ m.data_inizio|data_italiana }}{% endif %}
+            {% if m.data_fine and m.data_fine != m.data_inizio %} – {{ m.data_fine|data_italiana }}{% endif %}
+            {% if m.luogo %} · {{ m.luogo }}{% endif %}
+          </p>
+          {% if motivo %}
+            <p class="etichetta arancione">{{ motivo }}</p>
+          {% else %}
+            <p class="etichetta verde">Iscrizioni aperte</p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="scheda">
+      <p>Non c'è ancora nessuna manifestazione.</p>
+    </div>
+  {% endif %}
+
+{% endblock %}

@@ -1,0 +1,8 @@
+# Le librerie che servono al programma.
+# Si installano con:    pip install -r requisiti.txt
+#
+# Sono tutte in puro Python: niente da compilare, stesse righe su
+# Windows, Mac e Linux.
+
+Flask>=3.0
+waitress>=3.0

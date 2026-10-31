@@ -1,0 +1,75 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}{{ 'Nuova attività' if not a else a.nome }} · Area riservata{% endblock %}
+{% block titolo_pagina %}{{ 'Nuova attività' if not a else 'Modifica: ' ~ a.nome }}{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <p class="aiuto">Manifestazione: <strong>{{ m.nome }}</strong></p>
+
+  {% if errori %}
+    <div class="avviso rosso">
+      <p><strong>{% if errori|length == 1 %}Manca una cosa{% else %}Mancano alcune cose{% endif %}:</strong></p>
+      <ul>{% for errore in errori %}<li>{{ errore }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <form method="post">
+    <section class="scheda">
+
+      <p class="campo">
+        <label for="nome">Nome dell'attività <span class="obbligatorio">*</span></label>
+        <input type="text" id="nome" name="nome" value="{{ valori.nome }}" required>
+        <span class="aiuto">Per esempio «Pranzo sociale», «Gimkana a tempo».</span>
+      </p>
+
+      <p class="campo">
+        <label for="descrizione">Descrizione</label>
+        <textarea id="descrizione" name="descrizione" rows="3">{{ valori.descrizione }}</textarea>
+        <span class="aiuto">Quello che chi si iscrive deve sapere prima di
+          spuntarla: cosa serve portare, limiti di età, altro.</span>
+      </p>
+
+      <div class="campi affiancati">
+        <p class="campo">
+          <label for="giorno">Giorno</label>
+          <input type="date" id="giorno" name="giorno" value="{{ valori.giorno }}">
+        </p>
+        <p class="campo">
+          <label for="ora_inizio">Ora</label>
+          <input type="time" id="ora_inizio" name="ora_inizio" value="{{ valori.ora_inizio }}">
+        </p>
+      </div>
+
+      <div class="campi affiancati">
+        <p class="campo">
+          <label for="posti">Posti disponibili</label>
+          <input type="number" id="posti" name="posti" min="1" inputmode="numeric"
+                 value="{{ valori.posti_testo }}">
+          <span class="aiuto"><strong>Lascia vuoto se non c'è un limite.</strong>
+            Il numero conta le persone, non le iscrizioni: un gruppo di
+            quattro occupa quattro posti.</span>
+        </p>
+        <p class="campo">
+          <label for="quota">Quota a persona</label>
+          <input type="text" id="quota" name="quota" inputmode="decimal"
+                 value="{{ valori.quota_testo }}" placeholder="0,00">
+          <span class="aiuto">In euro, per esempio <code>20,00</code>.
+            <strong>Lascia vuoto se è gratuita.</strong> Si paga in loco: il
+            programma non incassa niente.</span>
+        </p>
+      </div>
+
+    </section>
+
+    <p class="azioni">
+      <button type="submit" class="pulsante">
+        {{ 'Aggiungi l\'attività' if not a else 'Salva le modifiche' }}</button>
+    </p>
+    <p class="azioni-in-riga">
+      <a class="pulsante piccolo secondario"
+         href="{{ url_for('riservato.manifestazione', numero=m.id) }}">Annulla</a>
+    </p>
+  </form>
+
+{% endblock %}

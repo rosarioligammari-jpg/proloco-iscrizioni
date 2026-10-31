@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block titolo %}Iscrizione registrata · {{ m.nome }}{% endblock %}
+
+{% block testata %}
+  <h1>{{ m.nome }}</h1>
+{% endblock %}
+
+{% block corpo %}
+
+  <div class="avviso verde">
+    <p class="grande"><strong>Iscrizione registrata.</strong></p>
+    <p>Il tuo codice è <strong class="codice">{{ iscrizione.codice_conferma }}</strong> —
+      tienilo da parte o fai uno scatto a questa pagina.</p>
+  </div>
+
+  <section class="scheda">
+    <h2>Cosa è stato registrato</h2>
+    <dl class="riepilogo">
+      <dt>Chi</dt>
+      <dd>
+        {{ iscrizione.nome }} {{ iscrizione.cognome }}
+        {% if iscrizione.tipo == 'gruppo' %}
+          <br>per il gruppo <strong>{{ iscrizione.gruppo_nome }}</strong>,
+          {{ iscrizione.numero_persone|persone }}
+        {% endif %}
+      </dd>
+
+      <dt>Contatto</dt>
+      <dd>{{ iscrizione.telefono }}{% if iscrizione.email %} · {{ iscrizione.email }}{% endif %}</dd>
+
+      {% if iscrizione.tipo == 'gruppo' and iscrizione.nomi_partecipanti %}
+        <dt>Partecipanti</dt>
+        <dd class="prelinea">{{ iscrizione.nomi_partecipanti }}</dd>
+      {% endif %}
+
+      <dt>Attività</dt>
+      <dd>
+        <ul class="elenco-semplice">
+          {% for r in righe %}
+            <li>
+              <strong>{{ r.nome }}</strong>
+              {% if r.giorno %} · {{ r.giorno|data_italiana }}{% endif %}
+              {% if r.ora_inizio %} · ore {{ r.ora_inizio }}{% endif %}
+              {% if r.stato == 'attesa' %}
+                <span class="etichetta arancione">in lista d'attesa</span>
+              {% endif %}
+              {% if r.quota_centesimi %}
+                <br><span class="aiuto">quota {{ r.quota_centesimi|euro }}
+                  × {{ r.persone }} = {{ (r.quota_centesimi * r.persone)|euro_secco }}</span>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </dd>
+
+      {% if iscrizione.note %}
+        <dt>Note</dt>
+        <dd class="prelinea">{{ iscrizione.note }}</dd>
+      {% endif %}
+
+      {% if totale_centesimi %}
+        <dt>Quota</dt>
+        <dd><strong>{{ totale_centesimi|euro_secco }}</strong>
+          da versare in loco il giorno della manifestazione.</dd>
+      {% endif %}
+
+      <dt>Inviata il</dt>
+      <dd>{{ iscrizione.creata_il|data_ora_italiana }}</dd>
+    </dl>
+  </section>
+
+  {% if righe | selectattr('stato', 'equalto', 'attesa') | list %}
+    <div class="avviso arancione">
+      <p>Per le attività segnate <strong>in lista d'attesa</strong> il posto
+        non è ancora garantito: ti avvisiamo al numero che hai lasciato se
+        si libera.</p>
+    </div>
+  {% endif %}
+
+  <p class="azioni">
+    <a class="pulsante secondario"
+       href="{{ url_for('pubblico.manifestazione', codice=m.codice) }}">Iscrivi un'altra persona o gruppo</a>
+  </p>
+
+  {% if m.contatto_organizzatore %}
+    <p class="aiuto">Per correggere o annullare l'iscrizione contatta gli
+      organizzatori: {{ m.contatto_organizzatore }}.</p>
+  {% endif %}
+
+{% endblock %}

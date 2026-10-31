@@ -1,0 +1,538 @@
+/* stile.css -- unico foglio di stile del programma.
+   Pensato prima per il telefono: le iscrizioni si compilano quasi sempre
+   da li'. Bersagli grandi, caratteri leggibili, niente colonne strette. */
+
+:root {
+  --inchiostro: #1f2630;
+  --inchiostro-tenue: #5f6774;
+  --carta: #f7f8fa;
+  --carta-scheda: #ffffff;
+  --bordo: #dfe1e6;
+  --verde-ente: #8db749;
+  --giallo-ente: #edcf54;
+  --azzurro-ente: #6ea8d1;
+  --blu-ente: #2b384b;
+  --accento: #b23d2b;
+  --accento-scuro: #8e3021;
+  --verde: #1f6d3b;
+  --verde-sfondo: #e7f3ea;
+  --arancione: #9a5a05;
+  --arancione-sfondo: #fcf0dc;
+  --rosso: #a01b1b;
+  --rosso-sfondo: #fbe9e9;
+  --raggio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--carta);
+  color: var(--inchiostro);
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.contenuto {
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* ------------------------------------------------------------- testata */
+
+.testata {
+  background: var(--blu-ente);
+  color: #fff;
+  padding: 1.25rem 0 1.5rem;
+}
+
+.intestazione {
+  display: flex;
+  align-items: center;
+  gap: .9rem;
+}
+
+.intestazione .logo {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.intestazione-testo { min-width: 0; }
+
+.testata .programma {
+  margin: 0 0 .35rem;
+  font-size: .8rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .85;
+}
+
+.testata h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  line-height: 1.2;
+}
+
+.testata .sottotitolo {
+  margin: .3rem 0 0;
+  font-size: 1.05rem;
+  opacity: .95;
+}
+
+.testata .quando {
+  margin: .6rem 0 0;
+  font-size: .95rem;
+  opacity: .9;
+}
+
+/* -------------------------------------------------------------- schede */
+
+main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
+
+.scheda {
+  background: var(--carta-scheda);
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  padding: 1rem;
+  margin: 0 0 1rem;
+}
+
+.scheda h2 {
+  margin: 0 0 .75rem;
+  font-size: 1.15rem;
+  color: var(--blu-ente);
+}
+
+.scheda.descrizione p { margin: 0 0 .6rem; }
+.scheda.descrizione p:last-child { margin-bottom: 0; }
+
+/* -------------------------------------------------------------- avvisi */
+
+.avviso {
+  border-radius: var(--raggio);
+  padding: .9rem 1rem;
+  margin: 0 0 1rem;
+  border: 1px solid transparent;
+}
+.avviso p { margin: 0 0 .4rem; }
+.avviso p:last-child { margin-bottom: 0; }
+.avviso ul { margin: .25rem 0 0; padding-left: 1.2rem; }
+.avviso .grande { font-size: 1.15rem; }
+
+.avviso.verde     { background: var(--verde-sfondo);     border-color: #bfdcc6; color: #14402a; }
+.avviso.arancione { background: var(--arancione-sfondo); border-color: #ecd3a4; color: #6b3f05; }
+.avviso.rosso     { background: var(--rosso-sfondo);     border-color: #eec2c2; color: #7a1414; }
+
+.codice {
+  font-family: "Courier New", monospace;
+  font-size: 1.3rem;
+  letter-spacing: .12em;
+  background: #fff;
+  border: 1px solid #bfdcc6;
+  border-radius: 6px;
+  padding: .1rem .4rem;
+}
+
+/* --------------------------------------------------------- scelta tipo */
+
+.scelta-tipo {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+}
+
+.pastiglia {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 3rem;
+  padding: .6rem .9rem;
+  border: 2px solid var(--bordo);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+}
+.pastiglia:has(input:checked) {
+  border-color: var(--accento);
+  background: #fbeeea;
+  font-weight: 600;
+}
+.pastiglia input { width: 1.1rem; height: 1.1rem; }
+
+/* --------------------------------------------------------------- campi */
+
+.campi { display: block; }
+.campi.solo-gruppo { display: none; }
+.campi.solo-gruppo.visibile { display: block; }
+
+.campo { margin: 0 0 1rem; }
+.campo label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.campo .obbligatorio { color: var(--accento); }
+.campo .facoltativo { color: var(--inchiostro-tenue); font-weight: 400; font-size: .9rem; }
+
+.campo input[type="text"],
+.campo input[type="tel"],
+.campo input[type="email"],
+.campo input[type="number"],
+.campo textarea {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: .6rem .7rem;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #c3c8d0;
+  border-radius: 8px;
+}
+.campo textarea { min-height: 5rem; resize: vertical; }
+
+.campo input:focus, .campo textarea:focus {
+  outline: 3px solid #e9bdb2;
+  border-color: var(--accento);
+}
+
+.aiuto {
+  display: block;
+  margin-top: .25rem;
+  font-size: .9rem;
+  color: var(--inchiostro-tenue);
+}
+.aiuto.sopra-elenco { margin: -.25rem 0 .75rem; }
+.aiuto.sotto-pulsante { text-align: center; }
+
+.campo.spunta label {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  font-weight: 400;
+}
+.campo.spunta input { width: 1.4rem; height: 1.4rem; flex: 0 0 auto; margin-top: .15rem; }
+
+/* ----------------------------------------------------------- attivita' */
+
+.elenco-attivita { list-style: none; margin: 0; padding: 0; }
+
+.voce-attivita {
+  border: 1px solid var(--bordo);
+  border-radius: var(--raggio);
+  margin-bottom: .6rem;
+  background: #fff;
+}
+.voce-attivita:last-child { margin-bottom: 0; }
+
+.voce-attivita label {
+  display: flex;
+  align-items: flex-start;
+  gap: .7rem;
+  padding: .8rem;
+  cursor: pointer;
+}
+.voce-attivita.sola-lettura, .elenco-attivita.sola-lettura .voce-attivita {
+  padding: .8rem;
+}
+.voce-attivita label input { width: 1.4rem; height: 1.4rem; flex: 0 0 auto; margin-top: .2rem; }
+.voce-attivita:has(input:checked) { border-color: var(--accento); background: #fcf5f3; }
+.voce-attivita.completo { background: #f7f8fa; }
+
+.testo-attivita { display: block; }
+.nome-attivita { display: block; font-weight: 600; font-size: 1.05rem; }
+.dettaglio-attivita { display: block; font-size: .92rem; color: var(--inchiostro-tenue); margin-top: .1rem; }
+.descrizione-attivita { display: block; font-size: .95rem; margin-top: .35rem; }
+
+.posti {
+  display: inline-block;
+  margin-top: .45rem;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 600;
+}
+.posti.verde       { background: var(--verde-sfondo);     color: var(--verde); }
+.posti.arancione   { background: var(--arancione-sfondo); color: var(--arancione); }
+.posti.rosso       { background: var(--rosso-sfondo);     color: var(--rosso); }
+.posti.senza-limite{ background: #e8eaee;                 color: var(--inchiostro-tenue); }
+
+.totale-quota {
+  margin: .9rem 0 .25rem;
+  padding: .6rem .8rem;
+  background: var(--arancione-sfondo);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* ------------------------------------------------------------ pulsanti */
+
+.azioni { margin: 1.25rem 0 .5rem; }
+
+.pulsante {
+  display: block;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: .8rem 1rem;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accento);
+  border: none;
+  border-radius: var(--raggio);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.pulsante:hover { background: var(--accento-scuro); }
+.pulsante:disabled { background: #b9a79f; cursor: default; }
+
+.pulsante.secondario {
+  color: var(--accento);
+  background: #fff;
+  border: 2px solid var(--accento);
+}
+.pulsante.secondario:hover { background: #fbeeea; }
+
+/* ---------------------------------------------------------- riepilogo */
+
+.riepilogo { margin: 0; }
+.riepilogo dt {
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--inchiostro-tenue);
+  margin-top: .9rem;
+}
+.riepilogo dt:first-child { margin-top: 0; }
+.riepilogo dd { margin: .2rem 0 0; }
+.prelinea { white-space: pre-line; }
+
+.elenco-semplice { list-style: none; margin: 0; padding: 0; }
+.elenco-semplice li { margin-bottom: .5rem; }
+
+.etichetta {
+  display: inline-block;
+  padding: .1rem .45rem;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+}
+.etichetta.verde     { background: var(--verde-sfondo);     color: var(--verde); }
+.etichetta.arancione { background: var(--arancione-sfondo); color: var(--arancione); }
+
+.informativa {
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+  padding: .6rem .8rem;
+  margin: 0 0 1rem;
+  background: #fdfbf8;
+}
+.informativa summary { cursor: pointer; font-weight: 600; }
+.informativa p { font-size: .92rem; margin: .5rem 0 0; }
+
+/* ----------------------------------------------------- elenco eventi */
+
+.elenco-manifestazioni { list-style: none; margin: 0; padding: 0; }
+.elenco-manifestazioni h2 { margin: 0 0 .25rem; }
+.elenco-manifestazioni h2 a { color: var(--blu-ente); text-decoration: none; }
+.elenco-manifestazioni h2 a:hover { text-decoration: underline; }
+.elenco-manifestazioni .quando { margin: 0 0 .5rem; color: var(--inchiostro-tenue); font-size: .95rem; }
+.elenco-manifestazioni .sottotitolo { margin: 0 0 .25rem; }
+
+/* --------------------------------------------------------------- piede */
+
+.piede {
+  border-top: 1px solid var(--bordo);
+  padding: 1rem 0 2rem;
+  color: var(--inchiostro-tenue);
+  font-size: .85rem;
+}
+.piede p { margin: 0; }
+
+/* ------------------------------------------------- schermi piu' grandi */
+
+@media (min-width: 40rem) {
+  body { font-size: 18px; }
+  .testata { padding: 1.75rem 0 2rem; }
+  .testata h1 { font-size: 2.1rem; }
+  .scheda { padding: 1.25rem 1.5rem; }
+  .campi.affiancati { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+  .pulsante { width: auto; min-width: 16rem; margin: 0 auto; }
+}
+
+/* ===================================================================
+   AREA RISERVATA
+   Stessa impaginazione del pubblico, ma qui servono tabelle ed elenchi
+   fitti: si resta leggibili sul telefono facendo scorrere la tabella
+   invece di stringerla.
+   =================================================================== */
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin: 0 0 1rem;
+  padding: .5rem .75rem;
+  background: #eceef2;
+  border-radius: var(--raggio);
+  font-size: .95rem;
+}
+.barra a { color: var(--blu-ente); font-weight: 600; }
+.barra form { margin: 0; }
+
+.collegamento {
+  font: inherit;
+  font-size: .95rem;
+  color: var(--accento);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.collegamento:hover { color: var(--accento-scuro); }
+
+.pulsante.piccolo {
+  display: inline-block;
+  width: auto;
+  min-width: 0;
+  min-height: 2.6rem;
+  padding: .45rem 1rem;
+  font-size: .95rem;
+  margin: 0;
+}
+
+.azioni-in-riga {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin: .9rem 0 0;
+}
+.azioni-in-riga form { margin: 0; }
+
+.numeri {
+  list-style: none;
+  display: flex;
+  gap: .6rem 1.5rem;
+  flex-wrap: wrap;
+  margin: .5rem 0 0;
+  padding: 0;
+}
+.numeri li { white-space: nowrap; }
+.numeri strong { color: var(--blu-ente); }
+.numeri.grandi { font-size: 1.05rem; }
+.numeri.grandi strong { font-size: 1.6rem; display: block; line-height: 1.1; }
+.numeri .attesa strong { color: var(--arancione); }
+.numeri .annullata strong { color: var(--inchiostro-tenue); }
+
+.indirizzo { margin: 0; overflow-wrap: anywhere; }
+.indirizzo code,
+.elenco-manifestazioni code,
+.scheda code {
+  background: #eceef2;
+  border-radius: 5px;
+  padding: .1rem .35rem;
+  font-size: .92rem;
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------ tabelle */
+
+.tabella-scorrevole { overflow-x: auto; margin: 0 0 .5rem; }
+
+.tabella-scorrevole table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .95rem;
+}
+.tabella-scorrevole th,
+.tabella-scorrevole td {
+  padding: .5rem .55rem;
+  border-bottom: 1px solid var(--bordo);
+  text-align: left;
+  vertical-align: top;
+}
+.tabella-scorrevole th {
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--inchiostro-tenue);
+  white-space: nowrap;
+}
+.tabella-scorrevole td.numero,
+.tabella-scorrevole th.numero { text-align: right; white-space: nowrap; }
+.tabella-scorrevole tr.spenta { opacity: .6; }
+.tabella-scorrevole .aiuto { margin-top: .1rem; }
+
+.azioni-cella { white-space: nowrap; }
+.azioni-cella form { display: inline; margin: 0 0 0 .5rem; }
+
+.etichetta { background: #eceef2; color: var(--inchiostro-tenue); }
+.etichetta.rosso-pieno { background: var(--rosso); color: #fff; }
+
+/* ----------------------------------------------------------- iscritti */
+
+.elenco-iscritti { list-style: none; margin: 1rem 0 0; padding: 0; }
+
+.iscritto {
+  border: 1px solid var(--bordo);
+  border-left: 4px solid var(--verde);
+  border-radius: var(--raggio);
+  padding: .75rem .9rem;
+  margin-bottom: .75rem;
+  background: #fff;
+}
+.iscritto.annullato {
+  border-left-color: var(--inchiostro-tenue);
+  background: #f7f8fa;
+  opacity: .75;
+}
+.riga-nome { margin: 0 0 .15rem; font-size: 1.05rem; }
+.riga-azioni {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin: .6rem 0 0;
+}
+.riga-azioni form { margin: 0; }
+
+.righe-attivita { list-style: none; margin: .5rem 0 0; padding: 0; }
+.righe-attivita li {
+  padding: .2rem 0;
+  border-top: 1px dotted var(--bordo);
+  font-size: .95rem;
+}
+.righe-attivita li:first-child { border-top: none; }
+.righe-attivita form { display: inline; margin-left: .4rem; }
+.righe-attivita .aiuto { display: inline; }
+
+.nascosto-ma-letto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* La trappola per i programmi automatici: fuori dallo schermo, non
+   display:none, perche' i programmi saltano quello che e' spento. */
+.trappola {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

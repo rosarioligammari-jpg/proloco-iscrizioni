@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block titolo %}Area riservata · {{ titolo_scheda }}{% endblock %}
+
+{% block testata %}
+  <h1>Area riservata</h1>
+  <p class="sottotitolo">Riservata agli organizzatori</p>
+{% endblock %}
+
+{% block corpo %}
+
+  {% if prima_volta %}
+    <div class="avviso arancione">
+      <p><strong>Prima volta.</strong> Scegli adesso la password dell'area
+        riservata: servirà a te e a chi gestisce le iscrizioni.</p>
+      <p>Scrivila da qualche parte: non si recupera, si può solo
+        azzerare cancellando il programma dall'archivio.</p>
+    </div>
+
+    <form method="post" class="scheda">
+      <p class="campo">
+        <label for="password">Nuova password</label>
+        <input type="password" id="password" name="password"
+               autocomplete="new-password" required>
+        <span class="aiuto">Almeno 8 caratteri.</span>
+      </p>
+      <p class="campo">
+        <label for="ripetuta">Scrivila di nuovo</label>
+        <input type="password" id="ripetuta" name="ripetuta"
+               autocomplete="new-password" required>
+      </p>
+      <p class="azioni">
+        <button type="submit" class="pulsante">Imposta la password</button>
+      </p>
+    </form>
+
+  {% else %}
+
+    <form method="post" class="scheda">
+      <input type="hidden" name="torna_a" value="{{ torna_a }}">
+      <p class="campo">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password"
+               autocomplete="current-password" autofocus required>
+      </p>
+      <p class="azioni">
+        <button type="submit" class="pulsante">Entra</button>
+      </p>
+    </form>
+
+  {% endif %}
+
+{% endblock %}

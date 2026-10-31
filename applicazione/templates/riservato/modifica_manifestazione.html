@@ -1,0 +1,126 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}{{ 'Nuova manifestazione' if not m else m.nome }} · Area riservata{% endblock %}
+{% block titolo_pagina %}{{ 'Nuova manifestazione' if not m else 'Modifica: ' ~ m.nome }}{% endblock %}
+
+{% block contenuto_riservato %}
+
+  {% if errori %}
+    <div class="avviso rosso">
+      <p><strong>{% if errori|length == 1 %}Manca una cosa{% else %}Mancano alcune cose{% endif %}:</strong></p>
+      <ul>{% for errore in errori %}<li>{{ errore }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <form method="post">
+
+    <section class="scheda">
+      <h2>Che manifestazione è</h2>
+
+      <p class="campo">
+        <label for="nome">Nome <span class="obbligatorio">*</span></label>
+        <input type="text" id="nome" name="nome" value="{{ valori.nome }}" required>
+        <span class="aiuto">Per esempio «Motor Village Fest».</span>
+      </p>
+
+      <p class="campo">
+        <label for="sottotitolo">Sottotitolo</label>
+        <input type="text" id="sottotitolo" name="sottotitolo" value="{{ valori.sottotitolo }}">
+      </p>
+
+      <p class="campo">
+        <label for="descrizione">Descrizione</label>
+        <textarea id="descrizione" name="descrizione" rows="5">{{ valori.descrizione }}</textarea>
+        <span class="aiuto">Va a capo dove vai a capo tu.</span>
+      </p>
+
+      <p class="campo">
+        <label for="luogo">Luogo</label>
+        <input type="text" id="luogo" name="luogo" value="{{ valori.luogo }}">
+      </p>
+
+      <div class="campi affiancati">
+        <p class="campo">
+          <label for="data_inizio">Primo giorno</label>
+          <input type="date" id="data_inizio" name="data_inizio" value="{{ valori.data_inizio }}">
+        </p>
+        <p class="campo">
+          <label for="data_fine">Ultimo giorno</label>
+          <input type="date" id="data_fine" name="data_fine" value="{{ valori.data_fine }}">
+        </p>
+      </div>
+    </section>
+
+    <section class="scheda">
+      <h2>Chi organizza</h2>
+
+      <p class="campo">
+        <label for="organizzatore">Organizzatore</label>
+        <input type="text" id="organizzatore" name="organizzatore"
+               value="{{ valori.organizzatore or ente }}">
+      </p>
+
+      <p class="campo">
+        <label for="contatto_organizzatore">Contatto scritto nella pagina</label>
+        <input type="text" id="contatto_organizzatore" name="contatto_organizzatore"
+               value="{{ valori.contatto_organizzatore }}">
+        <span class="aiuto">Telefono o email a cui rivolgersi per correggere
+          o annullare un'iscrizione.</span>
+      </p>
+    </section>
+
+    <section class="scheda">
+      <h2>Iscrizioni</h2>
+
+      <p class="campo spunta">
+        <label>
+          <input type="checkbox" name="iscrizioni_aperte" value="1"
+                 {% if valori.iscrizioni_aperte %}checked{% endif %}>
+          <span><strong>Iscrizioni aperte.</strong> Se la togli, la pagina
+            pubblica resta visibile ma non si può più inviare nulla.</span>
+        </label>
+      </p>
+
+      <p class="campo">
+        <label for="chiusura_iscrizioni">Si chiudono da sole dopo il</label>
+        <input type="date" id="chiusura_iscrizioni" name="chiusura_iscrizioni"
+               value="{{ valori.chiusura_iscrizioni }}">
+        <span class="aiuto">Ultimo giorno utile per iscriversi. Lascia vuoto
+          se non c'è una scadenza.</span>
+      </p>
+
+      <p class="campo spunta">
+        <label>
+          <input type="checkbox" name="lista_attesa" value="1"
+                 {% if valori.lista_attesa %}checked{% endif %}>
+          <span><strong>Lista d'attesa.</strong> Quando un'attività è al
+            completo, chi si iscrive può chiedere di entrare in lista
+            d'attesa invece di restare fuori.</span>
+        </label>
+      </p>
+    </section>
+
+    <section class="scheda">
+      <h2>Informativa privacy <span class="obbligatorio">*</span></h2>
+      <p class="aiuto sopra-elenco">Compare nella pagina di iscrizione, e chi
+        si iscrive deve spuntare il consenso. Dev'essere vera per questa
+        manifestazione: chi raccoglie i dati, per farne cosa, per quanto
+        tempo li tiene e a chi chiedere la cancellazione.</p>
+      <p class="campo">
+        <label for="informativa_privacy" class="nascosto-ma-letto">Testo dell'informativa</label>
+        <textarea id="informativa_privacy" name="informativa_privacy" rows="10"
+                  required>{{ valori.informativa_privacy }}</textarea>
+      </p>
+    </section>
+
+    <p class="azioni">
+      <button type="submit" class="pulsante">
+        {{ 'Crea la manifestazione' if not m else 'Salva le modifiche' }}</button>
+    </p>
+    <p class="azioni-in-riga">
+      <a class="pulsante piccolo secondario"
+         href="{{ url_for('riservato.manifestazione', numero=m.id) if m else url_for('riservato.elenco') }}">Annulla</a>
+    </p>
+  </form>
+
+{% endblock %}

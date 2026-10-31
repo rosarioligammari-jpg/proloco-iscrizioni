@@ -1,0 +1,59 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}Manifestazioni · Area riservata{% endblock %}
+{% block titolo_pagina %}Manifestazioni{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <p class="azioni">
+    <a class="pulsante" href="{{ url_for('riservato.nuova_manifestazione') }}">
+      Nuova manifestazione</a>
+  </p>
+
+  {% if manifestazioni %}
+    {% for voce in manifestazioni %}
+      {% set m = voce.m %}
+      {% set t = voce.totali %}
+      <section class="scheda">
+        <h2><a href="{{ url_for('riservato.manifestazione', numero=m.id) }}">{{ m.nome }}</a></h2>
+        <p class="quando">
+          {% if m.data_inizio %}{{ m.data_inizio|data_italiana }}{% endif %}
+          {% if m.data_fine and m.data_fine != m.data_inizio %} – {{ m.data_fine|data_italiana }}{% endif %}
+          {% if m.luogo %} · {{ m.luogo }}{% endif %}
+        </p>
+
+        <p>
+          {% if m.iscrizioni_aperte %}
+            <span class="etichetta verde">Iscrizioni aperte</span>
+          {% else %}
+            <span class="etichetta arancione">Iscrizioni chiuse</span>
+          {% endif %}
+          {% if m.chiusura_iscrizioni %}
+            <span class="aiuto">chiusura prevista il {{ m.chiusura_iscrizioni|data_italiana }}</span>
+          {% endif %}
+        </p>
+
+        <ul class="numeri">
+          <li><strong>{{ t.persone }}</strong> {{ 'persona' if t.persone == 1 else 'persone' }}</li>
+          <li><strong>{{ t.iscrizioni }}</strong> {{ 'iscrizione' if t.iscrizioni == 1 else 'iscrizioni' }}</li>
+          {% if t.persone_solo_attesa %}
+            <li class="attesa"><strong>{{ t.persone_solo_attesa }}</strong> in lista d'attesa</li>
+          {% endif %}
+          {% if t.incasso_centesimi %}
+            <li><strong>{{ t.incasso_centesimi|euro_secco }}</strong> di quote attese</li>
+          {% endif %}
+        </ul>
+
+        <p class="aiuto">Link da mandare nei gruppi:
+          <code>{{ url_for('pubblico.manifestazione', codice=m.codice, _external=True) }}</code>
+        </p>
+      </section>
+    {% endfor %}
+  {% else %}
+    <div class="scheda">
+      <p>Non c'è ancora nessuna manifestazione. Comincia con
+        <a href="{{ url_for('riservato.nuova_manifestazione') }}">Nuova manifestazione</a>.</p>
+    </div>
+  {% endif %}
+
+{% endblock %}

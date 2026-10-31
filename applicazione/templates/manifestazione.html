@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block titolo %}{{ m.nome }} · Iscrizioni{% endblock %}
+
+{% block testata %}
+  <h1>{{ m.nome }}</h1>
+  {% if m.sottotitolo %}<p class="sottotitolo">{{ m.sottotitolo }}</p>{% endif %}
+  <p class="quando">
+    {% if m.data_inizio %}
+      {% if m.data_fine and m.data_fine != m.data_inizio %}
+        dal {{ m.data_inizio|data_italiana }} al {{ m.data_fine|data_italiana }}
+      {% else %}
+        {{ m.data_inizio|data_distesa }}
+      {% endif %}
+    {% endif %}
+    {% if m.luogo %}<span class="luogo">· {{ m.luogo }}</span>{% endif %}
+  </p>
+{% endblock %}
+
+{% block corpo %}
+
+  {% if m.descrizione %}
+    <div class="scheda descrizione">
+      {% for paragrafo in m.descrizione.split('\n') %}
+        {% if paragrafo.strip() %}<p>{{ paragrafo }}</p>{% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if motivo_chiusura %}
+    <div class="avviso arancione">
+      <p><strong>{{ motivo_chiusura }}</strong></p>
+      <p>Per informazioni contatta gli organizzatori{% if m.contatto_organizzatore %}:
+        {{ m.contatto_organizzatore }}{% endif %}.</p>
+    </div>
+
+    <h2>Le attività</h2>
+    {% include "_attivita_solo_lettura.html" %}
+
+  {% else %}
+
+    {% if errori %}
+      <div class="avviso rosso" id="errori">
+        <p><strong>{% if errori|length == 1 %}Manca una cosa{% else %}Mancano alcune cose{% endif %}:</strong></p>
+        <ul>
+          {% for errore in errori %}<li>{{ errore }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('pubblico.invia', codice=m.codice) }}"
+          id="modulo-iscrizione" novalidate>
+      <input type="hidden" name="gettone" value="{{ gettone }}">
+
+      {# Trappola per i programmi automatici: una persona questo
+         campo non lo vede nemmeno, e lo lascia vuoto. #}
+      <div class="trappola" aria-hidden="true">
+        <label for="sito_web">Non scrivere qui</label>
+        <input type="text" id="sito_web" name="sito_web" value=""
+               tabindex="-1" autocomplete="off">
+      </div>
+
+      <section class="scheda">
+        <h2>1. Chi si iscrive</h2>
+
+        <div class="scelta-tipo">
+          <label class="pastiglia">
+            <input type="radio" name="tipo" value="singolo"
+                   {% if valori.tipo != 'gruppo' %}checked{% endif %}>
+            <span>Mi iscrivo io</span>
+          </label>
+          <label class="pastiglia">
+            <input type="radio" name="tipo" value="gruppo"
+                   {% if valori.tipo == 'gruppo' %}checked{% endif %}>
+            <span>Iscrivo un gruppo</span>
+          </label>
+        </div>
+
+        <div class="campi">
+          <p class="campo">
+            <label for="nome">Nome <span class="obbligatorio">*</span></label>
+            <input type="text" id="nome" name="nome" value="{{ valori.nome|default('') }}"
+                   autocomplete="given-name" required>
+          </p>
+          <p class="campo">
+            <label for="cognome">Cognome <span class="obbligatorio">*</span></label>
+            <input type="text" id="cognome" name="cognome" value="{{ valori.cognome|default('') }}"
+                   autocomplete="family-name" required>
+          </p>
+          <p class="campo">
+            <label for="telefono">Telefono <span class="obbligatorio">*</span></label>
+            <input type="tel" id="telefono" name="telefono" value="{{ valori.telefono|default('') }}"
+                   autocomplete="tel" inputmode="tel" required>
+            <span class="aiuto">Serve solo per avvisarti se qualcosa cambia.</span>
+          </p>
+          <p class="campo">
+            <label for="email">Email <span class="facoltativo">(facoltativa)</span></label>
+            <input type="email" id="email" name="email" value="{{ valori.email|default('') }}"
+                   autocomplete="email" inputmode="email">
+          </p>
+        </div>
+
+        <div class="campi solo-gruppo" id="campi-gruppo">
+          <p class="campo">
+            <label for="gruppo_nome">Nome del gruppo <span class="obbligatorio">*</span></label>
+            <input type="text" id="gruppo_nome" name="gruppo_nome"
+                   value="{{ valori.gruppo_nome|default('') }}">
+            <span class="aiuto">Per esempio: «Moto Club Villafrati», «Famiglia Russo».</span>
+          </p>
+          <p class="campo">
+            <label for="numero_persone">Quante persone in tutto <span class="obbligatorio">*</span></label>
+            <input type="number" id="numero_persone" name="numero_persone" min="2"
+                   max="{{ massimo_gruppo }}" inputmode="numeric"
+                   value="{{ valori.numero_persone|default('2') }}">
+            <span class="aiuto">Conta anche te stesso. Fino a {{ massimo_gruppo }} persone per iscrizione.</span>
+          </p>
+          <p class="campo">
+            <label for="nomi_partecipanti">Nomi dei partecipanti <span class="facoltativo">(facoltativo)</span></label>
+            <textarea id="nomi_partecipanti" name="nomi_partecipanti" rows="4"
+                      placeholder="Un nome per riga">{{ valori.nomi_partecipanti|default('') }}</textarea>
+          </p>
+        </div>
+      </section>
+
+      <section class="scheda">
+        <h2>2. A cosa partecipi</h2>
+        <p class="aiuto sopra-elenco">Puoi scegliere più attività. Il numero di
+          posti indicato è quello ancora libero adesso.</p>
+
+        <ul class="elenco-attivita">
+          {% for a in attivita %}
+            <li class="voce-attivita {% if a.al_completo %}completo{% endif %}">
+              <label>
+                <input type="checkbox" name="attivita" value="{{ a.id }}"
+                       data-quota="{{ a.quota_centesimi }}"
+                       {% if a.id|string in valori.attivita|default([]) %}checked{% endif %}>
+                <span class="testo-attivita">
+                  <span class="nome-attivita">{{ a.nome }}</span>
+                  <span class="dettaglio-attivita">
+                    {% if a.giorno %}{{ a.giorno|data_italiana }}{% endif %}
+                    {% if a.ora_inizio %}· ore {{ a.ora_inizio }}{% endif %}
+                    {% if a.quota_centesimi %}· quota {{ a.quota_centesimi|euro }}{% else %}· gratuito{% endif %}
+                  </span>
+                  {% if a.descrizione %}
+                    <span class="descrizione-attivita">{{ a.descrizione }}</span>
+                  {% endif %}
+                  <span class="posti
+                    {%- if a.posti is none %} senza-limite
+                    {%- elif a.al_completo %} rosso
+                    {%- elif a.rimasti <= 5 %} arancione
+                    {%- else %} verde{% endif %}">
+                    {% if a.posti is none %}
+                      posti non limitati
+                    {% elif a.al_completo %}
+                      al completo{% if a.in_attesa %} · {{ a.in_attesa }} in lista d'attesa{% endif %}
+                    {% else %}
+                      posti rimasti: {{ a.rimasti }} su {{ a.posti }}
+                    {% endif %}
+                  </span>
+                </span>
+              </label>
+            </li>
+          {% else %}
+            <li class="voce-attivita"><p>Per questa manifestazione non sono
+              ancora state inserite le attività.</p></li>
+          {% endfor %}
+        </ul>
+
+        <p class="totale-quota" id="totale-quota" hidden>
+          Quota da versare in loco: <strong id="totale-quota-cifra">0,00 €</strong>
+        </p>
+
+        {% if m.lista_attesa %}
+          <p class="campo spunta">
+            <label>
+              <input type="checkbox" name="accetta_attesa" value="1"
+                     {% if valori.accetta_attesa %}checked{% endif %}>
+              <span>Se un'attività è al completo, mettimi in <strong>lista
+                d'attesa</strong> (ti avvisiamo se si libera un posto).</span>
+            </label>
+          </p>
+        {% endif %}
+      </section>
+
+      <section class="scheda">
+        <h2>3. Note e consenso</h2>
+        <p class="campo">
+          <label for="note">Note per gli organizzatori <span class="facoltativo">(facoltativo)</span></label>
+          <textarea id="note" name="note" rows="3"
+                    placeholder="Allergie, bambini, mezzi, altro">{{ valori.note|default('') }}</textarea>
+        </p>
+
+        {% if m.informativa_privacy %}
+          <details class="informativa">
+            <summary>Informativa sul trattamento dei dati</summary>
+            {% for paragrafo in m.informativa_privacy.split('\n') %}
+              {% if paragrafo.strip() %}<p>{{ paragrafo }}</p>{% endif %}
+            {% endfor %}
+          </details>
+        {% endif %}
+
+        <p class="campo spunta">
+          <label>
+            <input type="checkbox" name="consenso" value="1"
+                   {% if valori.consenso %}checked{% endif %}>
+            <span>Ho letto l'informativa e <strong>acconsento</strong> al
+              trattamento dei dati per l'organizzazione di questa
+              manifestazione. <span class="obbligatorio">*</span></span>
+          </label>
+        </p>
+      </section>
+
+      <p class="azioni">
+        <button type="submit" class="pulsante" id="pulsante-invio">Invia l'iscrizione</button>
+      </p>
+      <p class="aiuto sotto-pulsante">Dopo l'invio compare una pagina di
+        conferma con il tuo codice: tienila da parte o fanne uno scatto.</p>
+    </form>
+
+  {% endif %}
+
+{% endblock %}
+
+{% block fondo_pagina %}
+<script>
+  // Mostra i campi del gruppo solo quando serve.
+  (function () {
+    var tipi = document.querySelectorAll('input[name="tipo"]');
+    var campiGruppo = document.getElementById('campi-gruppo');
+    var numero = document.getElementById('numero_persone');
+
+    function aggiorna() {
+      var gruppo = document.querySelector('input[name="tipo"]:checked').value === 'gruppo';
+      if (campiGruppo) { campiGruppo.classList.toggle('visibile', gruppo); }
+      calcolaTotale();
+    }
+    for (var i = 0; i < tipi.length; i++) {
+      tipi[i].addEventListener('change', aggiorna);
+    }
+
+    // Quota attesa: solo un'informazione, il conto vero lo rifa' il programma.
+    function calcolaTotale() {
+      var spunte = document.querySelectorAll('input[name="attivita"]:checked');
+      var gruppo = document.querySelector('input[name="tipo"]:checked').value === 'gruppo';
+      var persone = gruppo && numero ? parseInt(numero.value, 10) || 1 : 1;
+      var centesimi = 0;
+      for (var i = 0; i < spunte.length; i++) {
+        centesimi += (parseInt(spunte[i].getAttribute('data-quota'), 10) || 0) * persone;
+      }
+      var riquadro = document.getElementById('totale-quota');
+      var cifra = document.getElementById('totale-quota-cifra');
+      if (!riquadro || !cifra) { return; }
+      if (centesimi > 0) {
+        cifra.textContent = (centesimi / 100).toFixed(2).replace('.', ',') + ' €';
+        riquadro.hidden = false;
+      } else {
+        riquadro.hidden = true;
+      }
+    }
+
+    var spunteAttivita = document.querySelectorAll('input[name="attivita"]');
+    for (var j = 0; j < spunteAttivita.length; j++) {
+      spunteAttivita[j].addEventListener('change', calcolaTotale);
+    }
+    if (numero) { numero.addEventListener('input', calcolaTotale); }
+
+    aggiorna();
+
+    // Doppio clic: il pulsante si spegne al primo invio.
+    var modulo = document.getElementById('modulo-iscrizione');
+    var pulsante = document.getElementById('pulsante-invio');
+    if (modulo && pulsante) {
+      modulo.addEventListener('submit', function () {
+        pulsante.disabled = true;
+        pulsante.textContent = 'Sto inviando...';
+      });
+    }
+  })();
+</script>
+{% endblock %}

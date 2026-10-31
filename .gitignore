@@ -1,0 +1,11 @@
+# I dati non vanno mai su GitHub: contengono i nomi e i telefoni
+# delle persone che si iscrivono.
+dati/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+chiave_segreta.txt
+
+__pycache__/
+*.pyc
+.venv/

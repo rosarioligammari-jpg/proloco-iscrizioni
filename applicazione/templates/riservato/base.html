@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block testata %}
+  <h1>{% block titolo_pagina %}Area riservata{% endblock %}</h1>
+  <p class="sottotitolo">Area riservata agli organizzatori</p>
+{% endblock %}
+
+{% block corpo %}
+  {% if mostra_barra | default(true) %}
+    <nav class="barra">
+      <a href="{{ url_for('riservato.elenco') }}">Tutte le manifestazioni</a>
+      <form method="post" action="{{ url_for('riservato.uscita') }}">
+        <button type="submit" class="collegamento">Esci</button>
+      </form>
+    </nav>
+  {% endif %}
+  {% block contenuto_riservato %}{% endblock %}
+{% endblock %}
