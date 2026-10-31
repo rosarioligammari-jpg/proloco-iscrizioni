@@ -1,0 +1,11 @@
+# Gli script e i file di configurazione devono arrivare sul server Linux
+# con le righe terminate alla maniera di Linux. Senza questa regola, un
+# file salvato su Windows fa fallire lo script con «bad interpreter».
+* text=auto eol=lf
+
+# I file di avvio di Windows invece le vogliono alla maniera di Windows.
+*.bat text eol=crlf
+
+*.png binary
+*.jpg binary
+*.webp binary
