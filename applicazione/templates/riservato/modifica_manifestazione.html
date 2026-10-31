@@ -12,14 +12,14 @@
     </div>
   {% endif %}
 
-  <form method="post">
+  <form method="post" novalidate>
 
     <section class="scheda">
       <h2>Che manifestazione è</h2>
 
       <p class="campo">
         <label for="nome">Nome <span class="obbligatorio">*</span></label>
-        <input type="text" id="nome" name="nome" value="{{ valori.nome }}" required>
+        <input type="text" id="nome" name="nome" value="{{ valori.nome }}">
         <span class="aiuto">Per esempio «Motor Village Fest».</span>
       </p>
 
@@ -107,9 +107,12 @@
         manifestazione: chi raccoglie i dati, per farne cosa, per quanto
         tempo li tiene e a chi chiedere la cancellazione.</p>
       <p class="campo">
-        <label for="informativa_privacy" class="nascosto-ma-letto">Testo dell'informativa</label>
-        <textarea id="informativa_privacy" name="informativa_privacy" rows="10"
-                  required>{{ valori.informativa_privacy }}</textarea>
+        <label for="informativa_privacy">Testo dell'informativa</label>
+        <textarea id="informativa_privacy" name="informativa_privacy" rows="10">{{ valori.informativa_privacy }}</textarea>
+        <span class="aiuto">È già scritta: leggila e correggila dove serve
+          (soprattutto per quanto tempo tenete i dati). Se la cancelli del
+          tutto, la manifestazione non si salva: senza informativa il modulo
+          non si può pubblicare.</span>
       </p>
     </section>
 

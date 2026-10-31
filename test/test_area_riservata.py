@@ -270,6 +270,42 @@ class ProvaAreaRiservata(ProvaBase):
         self.assertIn("60,00", testo)                 # 3 x 20,00
         self.assertIn(";", testo)
 
+    # ------------------------------------------- il modulo non deve bloccare
+
+    def test_il_modulo_nuovo_arriva_con_l_informativa_gia_scritta(self):
+        self.entra()
+        pagina = self.cliente.get(
+            "/riservato/manifestazione/nuova").get_data(as_text=True)
+        self.assertIn("sono raccolti da Pro Loco Villafrati APS", pagina)
+        self.assertIn("Pro Loco Villafrati APS", pagina)
+
+    def test_il_browser_non_blocca_il_modulo_su_campi_nascosti(self):
+        """I controlli li fa il programma e li scrive in cima in italiano:
+        se li facesse il browser, si fermerebbe su un campo lontano e da
+        fuori sembrerebbe che il pulsante non funzioni."""
+        self.entra()
+        pagina = self.cliente.get(
+            "/riservato/manifestazione/nuova").get_data(as_text=True)
+        self.assertIn("novalidate", pagina)
+        corpo = pagina.split("<form", 1)[1].split("</form>", 1)[0]
+        self.assertNotIn("required", corpo)
+
+    def test_basta_il_nome_per_creare_una_manifestazione(self):
+        from applicazione.riservato import informativa_predefinita
+        self.entra()
+        risposta = self.cliente.post("/riservato/manifestazione/nuova", data={
+            "nome": "Festa di settembre",
+            "informativa_privacy": informativa_predefinita()})
+        self.assertEqual(risposta.status_code, 302)
+        con = archivio.connessione()
+        try:
+            nuova = archivio.manifestazione_per_codice(
+                con, "festa-di-settembre")
+        finally:
+            con.close()
+        self.assertIsNotNone(nuova)
+        self.assertIn("Pro Loco Villafrati APS", nuova["informativa_privacy"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -14,12 +14,12 @@
     </div>
   {% endif %}
 
-  <form method="post">
+  <form method="post" novalidate>
     <section class="scheda">
 
       <p class="campo">
         <label for="nome">Nome dell'attività <span class="obbligatorio">*</span></label>
-        <input type="text" id="nome" name="nome" value="{{ valori.nome }}" required>
+        <input type="text" id="nome" name="nome" value="{{ valori.nome }}">
         <span class="aiuto">Per esempio «Pranzo sociale», «Gimkana a tempo».</span>
       </p>
 

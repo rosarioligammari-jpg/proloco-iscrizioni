@@ -18,6 +18,7 @@ from functools import wraps
 from flask import (Blueprint, Response, abort, flash, g, redirect,
                    render_template, request, session, url_for)
 
+from configurazione import ENTE
 from applicazione import archivio
 from applicazione.formato import oggi_iso
 
@@ -263,10 +264,32 @@ def modifica_manifestazione(numero):
                            m=m, valori=_valori_da_riga(m), errori=[])
 
 
+def informativa_predefinita():
+    """Un'informativa gia' scritta per una manifestazione nuova.
+
+    Non e' un parere legale: e' un punto di partenza onesto, che dice
+    chi raccoglie i dati, per farne cosa, per quanto tempo e a chi
+    rivolgersi. Va letta e adattata, non firmata a scatola chiusa.
+    """
+    return (
+        "I dati che lasci (nome, cognome, telefono, eventuale email e i "
+        "nomi dei partecipanti del gruppo) sono raccolti da %s al solo "
+        "scopo di organizzare questa manifestazione: contare i "
+        "partecipanti, gestire i posti delle singole attività e avvisarti "
+        "se qualcosa cambia.\n"
+        "I dati non vengono comunicati a terzi né usati per altri scopi, e "
+        "vengono cancellati entro sei mesi dalla fine della "
+        "manifestazione.\n"
+        "Puoi chiedere in qualunque momento di vedere, correggere o "
+        "cancellare i tuoi dati scrivendo agli organizzatori ai contatti "
+        "indicati in questa pagina." % ENTE)
+
+
 def _valori_vuoti():
     return {"nome": "", "sottotitolo": "", "descrizione": "", "luogo": "",
-            "data_inizio": "", "data_fine": "", "organizzatore": "",
-            "contatto_organizzatore": "", "informativa_privacy": "",
+            "data_inizio": "", "data_fine": "", "organizzatore": ENTE,
+            "contatto_organizzatore": "",
+            "informativa_privacy": informativa_predefinita(),
             "iscrizioni_aperte": True, "chiusura_iscrizioni": "",
             "lista_attesa": True}
 
