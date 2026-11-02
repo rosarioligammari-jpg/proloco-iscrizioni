@@ -170,13 +170,18 @@
           Quota da versare in loco: <strong id="totale-quota-cifra">0,00 €</strong>
         </p>
 
-        {% if m.lista_attesa %}
-          <p class="campo spunta">
+        {# La spunta della lista d'attesa compare SOLO quando serve
+           davvero: o perché un'attività è già al completo, o perché il
+           posto non basta per il gruppo appena inviato. Finché c'è posto
+           per tutti, chiederlo è una domanda senza senso. #}
+        {% if m.lista_attesa and mostra_attesa %}
+          <p class="campo spunta attesa-serve">
             <label>
               <input type="checkbox" name="accetta_attesa" value="1"
                      {% if valori.accetta_attesa %}checked{% endif %}>
-              <span>Se un'attività è al completo, mettimi in <strong>lista
-                d'attesa</strong> (ti avvisiamo se si libera un posto).</span>
+              <span>Qualche attività è al completo: se è una di quelle che
+                hai scelto, mettimi in <strong>lista d'attesa</strong>
+                (ti avvisiamo se si libera un posto).</span>
             </label>
           </p>
         {% endif %}

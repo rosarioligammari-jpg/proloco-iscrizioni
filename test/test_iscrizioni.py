@@ -425,5 +425,48 @@ class ProvaImpostazioniDaFuori(unittest.TestCase):
             "predefinito")
 
 
+class ProvaSpuntaListaAttesa(ProvaBase):
+    """La spunta della lista d'attesa si mostra SOLO quando serve.
+
+    Chiedere «se fosse al completo» mentre c'e' posto per tutti e' una
+    domanda senza senso, che fa esitare chi compila.
+    """
+
+    SPUNTA = 'name="accetta_attesa"'
+
+    def test_con_posto_per_tutti_la_spunta_non_compare(self):
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        self.assertNotIn(self.SPUNTA, pagina)
+
+    def test_quando_un_attivita_e_al_completo_la_spunta_compare(self):
+        self.iscrivi(tipo="gruppo", gruppo_nome="Tutti", numero_persone="10")
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        self.assertIn("al completo", pagina)
+        self.assertIn(self.SPUNTA, pagina)
+
+    def test_se_restano_posti_ma_non_bastano_la_spunta_compare(self):
+        # Sei posti rimasti e un gruppo di dieci: l'attivita' NON e' al
+        # completo, ma il posto non basta. Il messaggio consiglia la lista
+        # d'attesa, quindi la spunta deve esserci davvero.
+        self.iscrivi(tipo="gruppo", gruppo_nome="Primi", numero_persone="4")
+        risposta = self.iscrivi(tipo="gruppo", gruppo_nome="Secondi",
+                                numero_persone="10",
+                                gettone="gettone-secondo-gruppo")
+        self.assertEqual(risposta.status_code, 400)
+        pagina = risposta.get_data(as_text=True)
+        self.assertIn("posto per 10 persone", pagina)
+        self.assertIn(self.SPUNTA, pagina)
+
+    def test_se_la_manifestazione_non_prevede_l_attesa_non_compare_mai(self):
+        con = archivio.connessione()
+        con.execute("UPDATE manifestazione SET lista_attesa = 0 "
+                    "WHERE codice = 'festa'")
+        con.close()
+        self.iscrivi(tipo="gruppo", gruppo_nome="Tutti", numero_persone="10")
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        self.assertIn("al completo", pagina)
+        self.assertNotIn(self.SPUNTA, pagina)
+
+
 if __name__ == "__main__":
     unittest.main()

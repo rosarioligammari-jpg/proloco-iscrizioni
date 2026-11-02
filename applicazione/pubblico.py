@@ -85,6 +85,13 @@ def _prospetto_attivita(con, manifestazione):
     return prospetto
 
 
+def _serve_la_lista_attesa(manifestazione, attivita):
+    """Vero se c'e' almeno un'attivita' gia' al completo."""
+    if not manifestazione["lista_attesa"]:
+        return False
+    return any(voce["al_completo"] for voce in attivita)
+
+
 def _valori_inviati():
     """Quello che l'utente ha scritto, ripulito dagli spazi, per poterlo
     rimettere nel modulo se qualcosa va corretto."""
@@ -142,13 +149,18 @@ def manifestazione(codice):
     riga = archivio.manifestazione_per_codice(g.con, codice)
     if riga is None:
         abort(404)
+    attivita = _prospetto_attivita(g.con, riga)
     return render_template(
         "manifestazione.html",
         m=riga,
-        attivita=_prospetto_attivita(g.con, riga),
+        attivita=attivita,
         motivo_chiusura=_iscrizioni_chiuse(riga),
         valori={"tipo": "singolo", "numero_persone": "2", "attivita": []},
         errori=[],
+        # La spunta della lista d'attesa si mostra solo quando serve:
+        # chiedere «se fosse al completo» mentre c'e' posto per tutti e'
+        # una domanda senza senso, che fa solo esitare chi compila.
+        mostra_attesa=_serve_la_lista_attesa(riga, attivita),
         massimo_gruppo=MASSIMO_PERSONE_PER_GRUPPO,
         gettone=secrets.token_urlsafe(24))
 
@@ -216,7 +228,8 @@ def invia(codice):
         if pieni:
             con.execute("ROLLBACK")
             return _rimostra(riga, valori,
-                             [_messaggio_pieni(pieni, numero_persone, riga)])
+                             [_messaggio_pieni(pieni, numero_persone, riga)],
+                             offri_attesa=True)
 
         if not scelte:
             con.execute("ROLLBACK")
@@ -322,14 +335,24 @@ def _messaggio_pieni(pieni, numero_persone, manifestazione):
     return testo
 
 
-def _rimostra(manifestazione, valori, errori):
-    """Rimostra il modulo con quello che l'utente aveva già scritto."""
+def _rimostra(manifestazione, valori, errori, offri_attesa=False):
+    """Rimostra il modulo con quello che l'utente aveva già scritto.
+
+    offri_attesa: da accendere quando il posto non basta per questo
+    gruppo. Succede anche su attivita' che NON sono al completo (restano
+    sei posti e il gruppo e' di dieci): in quel caso la spunta della lista
+    d'attesa deve comparire, altrimenti il messaggio consiglia di spuntare
+    una cosa che non c'e'.
+    """
+    attivita = _prospetto_attivita(g.con, manifestazione)
     return render_template(
         "manifestazione.html",
         m=manifestazione,
-        attivita=_prospetto_attivita(g.con, manifestazione),
+        attivita=attivita,
         motivo_chiusura=_iscrizioni_chiuse(manifestazione),
         valori=valori,
         errori=errori,
+        mostra_attesa=(offri_attesa
+                       or _serve_la_lista_attesa(manifestazione, attivita)),
         massimo_gruppo=MASSIMO_PERSONE_PER_GRUPPO,
         gettone=valori["gettone"] or secrets.token_urlsafe(24)), 400
