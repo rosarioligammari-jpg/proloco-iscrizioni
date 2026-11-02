@@ -468,5 +468,51 @@ class ProvaSpuntaListaAttesa(ProvaBase):
         self.assertNotIn(self.SPUNTA, pagina)
 
 
+class ProvaGruppoDiAppartenenza(ProvaBase):
+    """Il gruppo si puo' indicare anche iscrivendosi da soli.
+
+    Una cosa e' ISCRIVERE un gruppo (il capogruppo, con quante persone),
+    un'altra e' APPARTENERE a un gruppo (il moto club, la famiglia): la
+    seconda vale per chiunque si iscriva.
+    """
+
+    def test_il_campo_del_gruppo_e_fra_quelli_di_tutti(self):
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        prima_del_blocco = pagina.split('class="campi solo-gruppo"')[0]
+        self.assertIn('name="gruppo_nome"', prima_del_blocco)
+
+    def test_chi_si_iscrive_da_solo_puo_dire_il_suo_gruppo(self):
+        risposta = self.iscrivi(gruppo_nome="Moto Club Villafrati")
+        self.assertEqual(risposta.status_code, 302)
+        con = archivio.connessione()
+        try:
+            riga = con.execute("SELECT tipo, gruppo_nome, numero_persone "
+                               "FROM iscrizione").fetchone()
+        finally:
+            con.close()
+        self.assertEqual(riga["tipo"], "singolo")
+        self.assertEqual(riga["gruppo_nome"], "Moto Club Villafrati")
+        # Appartenere a un gruppo non vuol dire occupare piu' di un posto.
+        self.assertEqual(riga["numero_persone"], 1)
+        self.assertEqual(self.persone_su(self.pranzo), 1)
+
+    def test_la_conferma_mostra_il_gruppo_anche_al_singolo(self):
+        risposta = self.iscrivi(gruppo_nome="Moto Club Villafrati")
+        pagina = self.cliente.get(
+            risposta.headers["Location"]).get_data(as_text=True)
+        self.assertIn("del gruppo", pagina)
+        self.assertIn("Moto Club Villafrati", pagina)
+
+    def test_senza_gruppo_ci_si_iscrive_lo_stesso(self):
+        risposta = self.iscrivi()
+        self.assertEqual(risposta.status_code, 302)
+
+    def test_per_un_capogruppo_il_gruppo_resta_obbligatorio(self):
+        risposta = self.iscrivi(tipo="gruppo", numero_persone="4",
+                                gruppo_nome="")
+        self.assertEqual(risposta.status_code, 400)
+        self.assertIn("nome del gruppo", risposta.get_data(as_text=True))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -23,6 +23,8 @@
         {% if iscrizione.tipo == 'gruppo' %}
           <br>per il gruppo <strong>{{ iscrizione.gruppo_nome }}</strong>,
           {{ iscrizione.numero_persone|persone }}
+        {% elif iscrizione.gruppo_nome %}
+          <br>del gruppo <strong>{{ iscrizione.gruppo_nome }}</strong>
         {% endif %}
       </dd>
 

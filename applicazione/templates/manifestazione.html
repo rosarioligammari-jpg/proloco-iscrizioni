@@ -88,6 +88,19 @@
                    autocomplete="family-name" required>
           </p>
           <p class="campo">
+            <label for="gruppo_nome">Gruppo o club
+              <span class="obbligatorio solo-per-gruppo" hidden>*</span>
+              <span class="facoltativo solo-per-singolo">(facoltativo)</span>
+            </label>
+            <input type="text" id="gruppo_nome" name="gruppo_nome"
+                   value="{{ valori.gruppo_nome|default('') }}"
+                   autocomplete="organization">
+            <span class="aiuto">Se fai parte di un gruppo scrivilo qui: moto
+              club, associazione, famiglia, comitiva. Per esempio «Moto Club
+              Villafrati». Serve agli organizzatori per capire chi arriva
+              insieme.</span>
+          </p>
+          <p class="campo">
             <label for="telefono">Telefono <span class="obbligatorio">*</span></label>
             <input type="tel" id="telefono" name="telefono" value="{{ valori.telefono|default('') }}"
                    autocomplete="tel" inputmode="tel" required>
@@ -101,12 +114,6 @@
         </div>
 
         <div class="campi solo-gruppo" id="campi-gruppo">
-          <p class="campo">
-            <label for="gruppo_nome">Nome del gruppo <span class="obbligatorio">*</span></label>
-            <input type="text" id="gruppo_nome" name="gruppo_nome"
-                   value="{{ valori.gruppo_nome|default('') }}">
-            <span class="aiuto">Per esempio: «Moto Club Villafrati», «Famiglia Russo».</span>
-          </p>
           <p class="campo">
             <label for="numero_persone">Quante persone in tutto <span class="obbligatorio">*</span></label>
             <input type="number" id="numero_persone" name="numero_persone" min="2"
@@ -237,6 +244,11 @@
     function aggiorna() {
       var gruppo = document.querySelector('input[name="tipo"]:checked').value === 'gruppo';
       if (campiGruppo) { campiGruppo.classList.toggle('visibile', gruppo); }
+      // Il gruppo si puo' indicare sempre, ma per un capogruppo e' dovuto.
+      var perGruppo = document.querySelectorAll('.solo-per-gruppo');
+      var perSingolo = document.querySelectorAll('.solo-per-singolo');
+      for (var k = 0; k < perGruppo.length; k++) { perGruppo[k].hidden = !gruppo; }
+      for (var s = 0; s < perSingolo.length; s++) { perSingolo[s].hidden = gruppo; }
       calcolaTotale();
     }
     for (var i = 0; i < tipi.length; i++) {

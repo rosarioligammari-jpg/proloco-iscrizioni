@@ -146,6 +146,8 @@
               {% if i.tipo == 'gruppo' %}
                 — {{ i.gruppo_nome }},
                 <strong>{{ i.numero_persone|persone }}</strong>
+              {% elif i.gruppo_nome %}
+                — <span class="etichetta">{{ i.gruppo_nome }}</span>
               {% endif %}
               {% if i.stato == 'annullata' %}
                 <span class="etichetta arancione">annullata</span>
