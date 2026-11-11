@@ -201,6 +201,22 @@ Il nome del canale è l'unica cosa che protegge gli avvisi: chi lo conosce
 li riceve. Non va scritto in pubblico. Per cambiarlo basta salvarne uno
 nuovo e rifare il passo 3.
 
+### L'inciampo da conoscere: il servizio
+
+Di app chiamate «ntfy» ne esistono diverse, e **non usano tutte lo stesso
+servizio**: alcune lavorano su `ntfy.sh`, altre su `ntfy-me.com`, altre
+ancora su indirizzi propri. Se il servizio scritto nella pagina «Avvisi sul
+telefono» è diverso da quello dell'app, **gli avvisi partono e nessuno li
+riceve, senza che niente dia errore** da nessuna delle due parti.
+
+Per sapere quale usa l'app: aprirla, entrare nel canale e guardare
+l'indirizzo completo che mostra — `https://qualcosa.com/nome-del-canale`.
+La parte prima della barra è il servizio, e va copiata nella pagina.
+
+> Successe il 02/11/2026: tutto impostato giusto, il canale uguale, e
+> nessuna notifica. Il programma imbucava su `ntfy.sh`, l'app guardava su
+> `ntfy-me.com`.
+
 ### Perché nell'avviso non ci sono i nomi
 
 Chi si iscrive firma un'informativa che dice che **i suoi dati non vengono
