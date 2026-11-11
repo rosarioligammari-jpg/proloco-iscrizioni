@@ -216,6 +216,88 @@ def manifestazione(numero):
                                    codice=m["codice"], _external=True))
 
 
+# ------------------------------------------------- i biglietti da stampare
+
+TAGLIANDI_PREDEFINITI = "Pasto, Bibita"
+
+
+def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
+                      quanti_bianchi=0):
+    """Prepara i biglietti, uno per persona, in ordine di iscrizione.
+
+    Il numero e' progressivo e non si ripete: e' quello che al banco
+    permette di dire «il 47 ha gia' ritirato». I biglietti in bianco
+    continuano la stessa numerazione, cosi' anche chi si presenta senza
+    essersi iscritto entra nello stesso conto.
+    """
+    voci = []
+    numero = 0
+    for iscrizione in archivio.iscrizioni_di(con, manifestazione_id):
+        righe = archivio.righe_attivita_iscrizione(con, iscrizione["id"])
+        confermate = [r for r in righe if r["stato"] == "confermata"]
+        if not confermate:
+            continue
+        if solo_attivita and not any(r["attivita_id"] == solo_attivita
+                                     for r in confermate):
+            continue
+
+        nomi = [riga.strip() for riga
+                in iscrizione["nomi_partecipanti"].splitlines() if riga.strip()]
+        quante = (iscrizione["numero_persone"]
+                  if iscrizione["tipo"] == "gruppo" else 1)
+        for posizione in range(max(1, quante)):
+            numero += 1
+            if posizione < len(nomi):
+                nome = nomi[posizione]
+            elif posizione == 0:
+                nome = "%s %s" % (iscrizione["nome"], iscrizione["cognome"])
+            else:
+                nome = ""
+            voci.append({
+                "numero": numero,
+                "nome": nome,
+                "gruppo": iscrizione["gruppo_nome"],
+                "quante": quante,
+                "posizione": posizione + 1,
+                "codice": iscrizione["codice_conferma"],
+                "bianco": False,
+            })
+
+    for _ in range(quanti_bianchi):
+        numero += 1
+        voci.append({"numero": numero, "nome": "", "gruppo": "", "quante": 1,
+                     "posizione": 1, "codice": "", "bianco": True})
+    return voci
+
+
+@riservato.route("/manifestazione/<int:numero>/biglietti")
+@serve_entrata
+def biglietti(numero):
+    m = archivio.manifestazione_per_id(g.con, numero)
+    if m is None:
+        abort(404)
+
+    tagliandi_scritti = request.args.get("tagliandi", TAGLIANDI_PREDEFINITI)
+    tagliandi = [pezzo.strip() for pezzo in tagliandi_scritti.split(",")
+                 if pezzo.strip()]
+
+    try:
+        quanti_bianchi = max(0, min(500, int(request.args.get("bianchi", 0))))
+    except ValueError:
+        quanti_bianchi = 0
+
+    solo = request.args.get("attivita", "")
+    solo_attivita = int(solo) if solo.isdigit() else None
+
+    voci = _elenco_biglietti(g.con, numero, solo_attivita, quanti_bianchi)
+    return render_template(
+        "riservato/biglietti.html", m=m, voci=voci, tagliandi=tagliandi,
+        tagliandi_scritti=tagliandi_scritti, quanti_bianchi=quanti_bianchi,
+        solo_attivita=solo_attivita,
+        attivita=archivio.attivita_di(g.con, numero, solo_attive=False),
+        quanti_iscritti=len([v for v in voci if not v["bianco"]]))
+
+
 # --------------------------------------------- avvisi sul telefono (ntfy)
 
 @riservato.route("/avvisi", methods=["GET", "POST"])

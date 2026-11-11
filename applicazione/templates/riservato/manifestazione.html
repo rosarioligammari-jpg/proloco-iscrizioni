@@ -135,6 +135,8 @@
       <p class="azioni-in-riga">
         <a class="pulsante piccolo secondario"
            href="{{ url_for('riservato.esporta', numero=m.id) }}">Scarica l'elenco per Excel</a>
+        <a class="pulsante piccolo secondario"
+           href="{{ url_for('riservato.biglietti', numero=m.id) }}">Biglietti da stampare</a>
       </p>
 
       <ul class="elenco-iscritti">

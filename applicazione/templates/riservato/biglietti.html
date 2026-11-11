@@ -1,0 +1,124 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}Biglietti · {{ m.nome }}{% endblock %}
+{% block titolo_pagina %}Biglietti da stampare{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <section class="scheda senza-stampa">
+    <h2>Come si stampano</h2>
+    <ol class="passi">
+      <li>Scegli qui sotto i <strong>tagliandi</strong> e quanti biglietti in
+        bianco servono, poi premi <strong>«Prepara i biglietti»</strong>.</li>
+      <li>Premi <strong>«Stampa»</strong> (oppure Ctrl+P). Nella finestra di
+        stampa scegli <strong>A4</strong> e, se c'è, togli
+        «intestazioni e piè di pagina».</li>
+      <li>Escono <strong>dieci biglietti per foglio</strong>, con le linee
+        tratteggiate da tagliare.</li>
+    </ol>
+    <p class="aiuto">Dalla stessa finestra di stampa puoi scegliere
+      «Salva come PDF» invece della stampante, se devi portarli in
+      tipografia.</p>
+  </section>
+
+  <form method="get" class="scheda senza-stampa">
+    <h2>Cosa stampare</h2>
+
+    <p class="campo">
+      <label for="tagliandi">Tagliandi su ogni biglietto</label>
+      <input type="text" id="tagliandi" name="tagliandi"
+             value="{{ tagliandi_scritti }}">
+      <span class="aiuto">Separati da virgola. Per esempio
+        <code>Pasto, Bibita</code>. Sono i riquadri che al banco si
+        staccano o si forano man mano.</span>
+    </p>
+
+    <div class="campi affiancati">
+      <p class="campo">
+        <label for="attivita">Solo per chi partecipa a</label>
+        <select id="attivita" name="attivita">
+          <option value="">tutti gli iscritti</option>
+          {% for a in attivita %}
+            <option value="{{ a.id }}"
+                    {% if solo_attivita == a.id %}selected{% endif %}>{{ a.nome }}</option>
+          {% endfor %}
+        </select>
+        <span class="aiuto">Per esempio solo chi ha spuntato il pranzo.</span>
+      </p>
+
+      <p class="campo">
+        <label for="bianchi">Biglietti in bianco</label>
+        <input type="number" id="bianchi" name="bianchi" min="0" max="500"
+               value="{{ quanti_bianchi }}" inputmode="numeric">
+        <span class="aiuto">Per chi si presenta senza essersi iscritto. La
+          numerazione continua da quella degli iscritti.</span>
+      </p>
+    </div>
+
+    <p class="azioni">
+      <button type="submit" class="pulsante">Prepara i biglietti</button>
+    </p>
+  </form>
+
+  <section class="scheda senza-stampa">
+    <h2>Pronti da stampare</h2>
+    <ul class="numeri grandi">
+      <li><strong>{{ quanti_iscritti }}</strong> per gli iscritti</li>
+      {% if quanti_bianchi %}
+        <li><strong>{{ quanti_bianchi }}</strong> in bianco</li>
+      {% endif %}
+      <li><strong>{{ voci|length }}</strong> in tutto</li>
+      <li><strong>{{ (voci|length / 10) | round(0, 'ceil') | int }}</strong>
+        {{ 'foglio' if voci|length <= 10 else 'fogli' }} A4</li>
+    </ul>
+    {% if voci %}
+      <p class="azioni">
+        <button type="button" class="pulsante" onclick="window.print()">Stampa</button>
+      </p>
+    {% else %}
+      <p>Non c'è niente da stampare: non risulta nessun iscritto
+        {% if solo_attivita %}per quell'attività{% endif %}.</p>
+    {% endif %}
+  </section>
+
+  {% if voci %}
+    <div class="foglio-biglietti">
+      {% for v in voci %}
+        <div class="biglietto {{ 'in-bianco' if v.bianco }}">
+          <div class="biglietto-testa">
+            <span class="biglietto-numero">{{ v.numero }}</span>
+            <span class="biglietto-manifestazione">{{ m.nome }}{% if m.data_inizio %}
+              · {{ m.data_inizio|data_italiana }}{% endif %}</span>
+          </div>
+
+          <div class="biglietto-nome">
+            {% if v.bianco %}
+              <span class="riga-da-scrivere"></span>
+            {% else %}
+              {{ v.nome or '—' }}
+            {% endif %}
+          </div>
+
+          <div class="biglietto-gruppo">
+            {% if v.bianco %}
+              non iscritto
+            {% else %}
+              {% if v.gruppo %}{{ v.gruppo }}{% endif %}
+              {% if v.quante > 1 %}({{ v.posizione }} di {{ v.quante }}){% endif %}
+              {% if v.codice %}<span class="biglietto-codice">{{ v.codice }}</span>{% endif %}
+            {% endif %}
+          </div>
+
+          <div class="biglietto-tagliandi">
+            {% for tagliando in tagliandi %}
+              <span class="tagliando">{{ tagliando }}</span>
+            {% else %}
+              <span class="tagliando vuoto">nessun tagliando</span>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+{% endblock %}

@@ -196,6 +196,17 @@ main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
 }
 .campo textarea { min-height: 5rem; resize: vertical; }
 
+.campo select {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: .6rem .7rem;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #c3c8d0;
+  border-radius: 8px;
+}
+
 .campo input:focus, .campo textarea:focus {
   outline: 3px solid #e9bdb2;
   border-color: var(--accento);
@@ -582,3 +593,136 @@ a.collegamento.pericoloso { color: var(--rosso); }
   border-color: var(--rosso);
 }
 .pulsante.secondario.pericoloso:hover { background: var(--rosso-sfondo); }
+
+/* =====================================================================
+   I BIGLIETTI DA STAMPARE
+   Dieci per foglio A4, due colonne per cinque righe. Le misure sono in
+   millimetri perche' questa roba finisce sulla carta, non sullo schermo.
+   ===================================================================== */
+
+.foglio-biglietti {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2mm;
+  margin-top: 1rem;
+}
+
+.biglietto {
+  position: relative;
+  height: 53mm;
+  padding: 3mm 4mm;
+  border: 1px dashed #9aa2ad;
+  border-radius: 2mm;
+  background: #fff;
+  color: #000;
+  display: flex;
+  flex-direction: column;
+  /* Un biglietto non si spezza mai fra due fogli. */
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.biglietto-testa {
+  display: flex;
+  align-items: baseline;
+  gap: 3mm;
+  border-bottom: .4mm solid #000;
+  padding-bottom: 1.5mm;
+}
+
+.biglietto-numero {
+  font-size: 9mm;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.5mm;
+}
+
+.biglietto-manifestazione {
+  font-size: 2.8mm;
+  text-transform: uppercase;
+  letter-spacing: .3mm;
+  line-height: 1.2;
+}
+
+.biglietto-nome {
+  margin-top: 2mm;
+  font-size: 4.6mm;
+  font-weight: 700;
+  line-height: 1.15;
+  /* Un nome lungo non deve spingere fuori i tagliandi. */
+  overflow: hidden;
+  max-height: 11mm;
+}
+
+.riga-da-scrivere {
+  display: block;
+  border-bottom: .3mm solid #000;
+  height: 5mm;
+  width: 100%;
+}
+
+.biglietto-gruppo {
+  font-size: 3mm;
+  color: #333;
+  margin-top: .8mm;
+  min-height: 4mm;
+}
+
+.biglietto-codice {
+  font-family: "Courier New", monospace;
+  letter-spacing: .3mm;
+  margin-left: 2mm;
+}
+
+.biglietto-tagliandi {
+  margin-top: auto;
+  display: flex;
+  gap: 2mm;
+}
+
+.tagliando {
+  flex: 1 1 0;
+  border: .4mm dashed #000;
+  border-radius: 1mm;
+  padding: 2mm 1mm;
+  text-align: center;
+  font-size: 3.4mm;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .2mm;
+}
+.tagliando.vuoto { border-style: solid; font-weight: 400; color: #666; }
+
+.biglietto.in-bianco .biglietto-numero { color: #444; }
+
+/* ------------------------------------------------------- la stampa vera */
+
+@media print {
+  /* Via tutto quello che non e' un biglietto. */
+  .senza-stampa,
+  .testata,
+  .piede,
+  .barra,
+  .avviso { display: none !important; }
+
+  body { background: #fff; font-size: 12pt; }
+  main.contenuto { padding: 0; max-width: none; }
+  .contenuto { padding: 0; max-width: none; }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  .foglio-biglietti {
+    margin: 0;
+    gap: 0;
+    grid-template-columns: repeat(2, 97mm);
+  }
+
+  .biglietto {
+    height: 55mm;
+    border-radius: 0;
+    border: .2mm dashed #666;
+  }
+}
