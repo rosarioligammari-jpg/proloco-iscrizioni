@@ -39,7 +39,10 @@ def canale_nuovo():
     riceve. Per questo non si usa «proloco» o «iscrizioni», ma un nome
     con dentro una parte casuale.
     """
-    return "iscrizioni-%s" % secrets.token_urlsafe(12).replace("-", "").lower()
+    # Corto apposta: questo nome va riscritto a mano dentro un'app sul
+    # telefono, e ogni carattere in piu' e' un carattere in cui sbagliare.
+    # Dieci cifre esadecimali bastano a renderlo non indovinabile.
+    return "iscrizioni-%s" % secrets.token_hex(5)
 
 
 def indirizzo_canale(server, canale):

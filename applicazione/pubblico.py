@@ -130,7 +130,11 @@ def salute():
         g.con.execute("SELECT 1").fetchone()
     except Exception:
         return {"stato": "guasto", "archivio": "non raggiungibile"}, 503
-    return {"stato": "va bene"}, 200
+    # «collegamento» serve a controllare da fuori che il programma si
+    # accorga di stare dietro un collegamento sicuro: se qui esce «http»
+    # mentre l'indirizzo pubblico e' https, i link che il programma
+    # scrive da se' (per esempio dentro gli avvisi) nascono sbagliati.
+    return {"stato": "va bene", "collegamento": request.scheme}, 200
 
 
 @pubblico.route("/")

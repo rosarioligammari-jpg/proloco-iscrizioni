@@ -72,7 +72,14 @@
     <section class="scheda">
       <h2>Prova</h2>
       <p>Nell'app ntfy il canale da aggiungere si chiama:</p>
-      <p class="indirizzo"><code>{{ canale }}</code></p>
+      <p class="indirizzo"><code id="nome-canale">{{ canale }}</code></p>
+      <p class="azioni-in-riga">
+        <button type="button" class="pulsante piccolo secondario"
+                id="copia-canale">Copia il nome del canale</button>
+      </p>
+      <p class="aiuto">Meglio copiarlo e incollarlo nell'app che riscriverlo:
+        basta un carattere diverso e gli avvisi finiscono in un canale che
+        nessuno ascolta, senza che niente dia errore.</p>
       <p class="aiuto">Se l'app chiede anche il server, è
         <code>{{ server }}</code>. L'indirizzo completo del canale è
         <code>{{ indirizzo }}</code>.</p>
@@ -96,4 +103,36 @@
       nei registri del programma.</p>
   </section>
 
+{% endblock %}
+
+{% block fondo_pagina %}
+<script>
+  (function () {
+    var pulsante = document.getElementById('copia-canale');
+    var nome = document.getElementById('nome-canale');
+    if (!pulsante || !nome) { return; }
+    pulsante.addEventListener('click', function () {
+      var testo = nome.textContent.trim();
+      function fatto() {
+        pulsante.textContent = 'Copiato';
+        setTimeout(function () {
+          pulsante.textContent = 'Copia il nome del canale';
+        }, 2500);
+      }
+      function selezione() {
+        var intervallo = document.createRange();
+        intervallo.selectNodeContents(nome);
+        var scelta = window.getSelection();
+        scelta.removeAllRanges();
+        scelta.addRange(intervallo);
+        pulsante.textContent = 'Selezionato: copia con Ctrl+C';
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(testo).then(fatto, selezione);
+      } else {
+        selezione();
+      }
+    });
+  })();
+</script>
 {% endblock %}
