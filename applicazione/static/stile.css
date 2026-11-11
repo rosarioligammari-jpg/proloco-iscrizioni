@@ -662,7 +662,7 @@ a.collegamento.pericoloso { color: var(--rosso); }
 }
 
 .biglietto-gruppo {
-  font-size: 3mm;
+  font-size: 3.3mm;
   color: #333;
   margin-top: .8mm;
   min-height: 4mm;

@@ -52,6 +52,15 @@ class ProvaBiglietti(ProvaBase):
         for nome in ("Giuseppe Lo Verde", "Anna Russo", "Carlo Neri"):
             self.assertIn(nome, pagina)
 
+    def test_senza_nome_c_e_una_riga_su_cui_scriverlo(self):
+        """Un trattino non dice niente a chi sta al banco: al posto del
+        nome mancante ci vuole una riga da riempire a penna."""
+        self.iscrivi(tipo="gruppo", gruppo_nome="Amici", numero_persone="3")
+        self.entra()
+        pagina = self.stampa()
+        self.assertNotIn("—</div>", pagina)
+        self.assertEqual(pagina.count("riga-da-scrivere"), 2)
+
     def test_senza_i_nomi_il_primo_biglietto_porta_il_referente(self):
         self.iscrivi(tipo="gruppo", gruppo_nome="Amici", numero_persone="3")
         self.entra()
