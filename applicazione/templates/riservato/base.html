@@ -15,5 +15,14 @@
       </form>
     </nav>
   {% endif %}
+  {% if avvisi_spenti and mostra_barra | default(true) %}
+    <div class="avviso arancione">
+      <p><strong>Gli avvisi sul telefono sono spenti.</strong> Quando
+        qualcuno si iscrive non arriva nessuna notifica, perché non è stato
+        impostato il canale.
+        <a href="{{ url_for('riservato.avvisi_telefono') }}">Impostalo
+        adesso</a> — ci vogliono due minuti.</p>
+    </div>
+  {% endif %}
   {% block contenuto_riservato %}{% endblock %}
 {% endblock %}

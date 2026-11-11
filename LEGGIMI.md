@@ -215,36 +215,6 @@ motivo si legge con `sudo docker logs --tail 50 iscrizioni-reale`.
 
 ---
 
-## L'avviso per email a ogni iscrizione
-
-Nell'area riservata, dentro la manifestazione, c'è **«Avvisi per gli
-organizzatori»**: ci si scrivono uno o più indirizzi email, separati da
-virgola. Da quel momento, **a ogni iscrizione** arriva un'email con:
-
-- chi si è iscritto, il gruppo, quante persone e il contatto;
-- le attività scelte, con quelle in lista d'attesa segnate;
-- la quota attesa e le note;
-- **quante persone siamo a quel momento**;
-- il collegamento all'elenco completo.
-
-Le email partono dalla casella **notifiche@clerm.it**, la stessa degli
-altri programmi dello studio: la configurazione è in
-`/srv/app-dati/posta.conf` sul server e si scrive con
-`~/metti-password-posta.sh`. Dentro il contenitore quel file si vede come
-`/posta.conf`, in sola lettura.
-
-**Se la posta non funziona, l'iscrizione viene registrata lo stesso.**
-L'avviso è un di più: non deve mai far fallire l'iscrizione di una
-persona. Il motivo del mancato invio si legge con:
-
-```bash
-sudo docker logs --tail 50 iscrizioni-reale
-```
-
-Lasciando il campo vuoto non parte nessuna email.
-
----
-
 ## Le difese per quando sta su internet
 
 | Difesa | Che cosa fa |

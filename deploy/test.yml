@@ -16,9 +16,6 @@ services:
       - "127.0.0.1:8213:8000"
     volumes:
       - /srv/app-dati/iscrizioni/test:/dati
-      # La casella unica dei programmi dello studio, in sola
-      # lettura: il programma la legge, non la cambia mai.
-      - /srv/app-dati/posta.conf:/posta.conf:ro
     environment:
       ISCRIZIONI_CARTELLA_DATI: /dati
       ISCRIZIONI_COOKIE_SICURO: "1"

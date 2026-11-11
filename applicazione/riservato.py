@@ -5,8 +5,10 @@
 # le iscrizioni, scaricare l'elenco.
 #
 # Due regole che valgono in tutta questa parte:
-#   - NIENTE si cancella davvero. Un'iscrizione sbagliata si ANNULLA e
-#     resta negli archivi; un'attivita' che non si fa piu' si SPEGNE.
+#   - NIENTE si cancella per sbaglio. Un'iscrizione sbagliata si ANNULLA
+#     e resta in archivio; un'attivita' che non si fa piu' si SPEGNE.
+#     Per cancellare davvero ci vuole un secondo gesto, su una cosa
+#     gia' annullata, con una pagina di conferma in mezzo.
 #   - dopo ogni salvataggio si dice all'utente CHE COSA e' stato salvato.
 
 import csv
@@ -43,6 +45,21 @@ def serve_entrata(funzione):
             return redirect(url_for("riservato.entrata", torna_a=request.path))
         return funzione(*argomenti, **parole)
     return controlla
+
+
+@riservato.context_processor
+def stato_degli_avvisi():
+    """Fa sapere a ogni pagina riservata se gli avvisi sono spenti.
+
+    Serve a non restare in silenzio: senza canale impostato il programma
+    non manda niente, ed è giusto — ma chi guarda deve saperlo, altrimenti
+    aspetta un avviso che non arriverà mai.
+    """
+    try:
+        canale = archivio.impostazione(g.con, avvisi.CHIAVE_CANALE, "")
+    except Exception:
+        canale = ""
+    return {"avvisi_spenti": not canale}
 
 
 def _bloccato():
@@ -283,16 +300,15 @@ def nuova_manifestazione():
             "  descrizione, luogo, data_inizio, data_fine, organizzatore, "
             "  contatto_organizzatore, informativa_privacy, "
             "  iscrizioni_aperte, chiusura_iscrizioni, lista_attesa, "
-            "  avvisi_a, creata_il) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "  creata_il) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (codice, valori["nome"], valori["sottotitolo"],
              valori["descrizione"], valori["luogo"], valori["data_inizio"],
              valori["data_fine"], valori["organizzatore"],
              valori["contatto_organizzatore"], valori["informativa_privacy"],
              1 if valori["iscrizioni_aperte"] else 0,
              valori["chiusura_iscrizioni"],
-             1 if valori["lista_attesa"] else 0, valori["avvisi_a"],
-             archivio.adesso()))
+             1 if valori["lista_attesa"] else 0, archivio.adesso()))
         nuova = archivio.manifestazione_per_codice(g.con, codice)
         flash("Creata la manifestazione «%s». Adesso aggiungi le attività."
               % valori["nome"], "fatto")
@@ -321,16 +337,14 @@ def modifica_manifestazione(numero):
             "  descrizione = ?, luogo = ?, data_inizio = ?, data_fine = ?, "
             "  organizzatore = ?, contatto_organizzatore = ?, "
             "  informativa_privacy = ?, iscrizioni_aperte = ?, "
-            "  chiusura_iscrizioni = ?, lista_attesa = ?, "
-            "  avvisi_a = ? WHERE id = ?",
+            "  chiusura_iscrizioni = ?, lista_attesa = ? WHERE id = ?",
             (valori["nome"], valori["sottotitolo"], valori["descrizione"],
              valori["luogo"], valori["data_inizio"], valori["data_fine"],
              valori["organizzatore"], valori["contatto_organizzatore"],
              valori["informativa_privacy"],
              1 if valori["iscrizioni_aperte"] else 0,
              valori["chiusura_iscrizioni"],
-             1 if valori["lista_attesa"] else 0, valori["avvisi_a"],
-             numero))
+             1 if valori["lista_attesa"] else 0, numero))
         flash("Salvato: «%s»." % valori["nome"], "fatto")
         return redirect(url_for("riservato.manifestazione", numero=numero))
 
@@ -365,7 +379,7 @@ def _valori_vuoti():
             "contatto_organizzatore": "",
             "informativa_privacy": informativa_predefinita(),
             "iscrizioni_aperte": True, "chiusura_iscrizioni": "",
-            "lista_attesa": True, "avvisi_a": ""}
+            "lista_attesa": True}
 
 
 def _valori_da_riga(m):
@@ -378,9 +392,7 @@ def _valori_da_riga(m):
             "informativa_privacy": m["informativa_privacy"],
             "iscrizioni_aperte": bool(m["iscrizioni_aperte"]),
             "chiusura_iscrizioni": m["chiusura_iscrizioni"] or "",
-            "lista_attesa": bool(m["lista_attesa"]),
-            "avvisi_a": (m["avvisi_a"]
-                         if "avvisi_a" in m.keys() else "")}
+            "lista_attesa": bool(m["lista_attesa"])}
 
 
 def _valori_manifestazione():
@@ -400,7 +412,6 @@ def _valori_manifestazione():
         "chiusura_iscrizioni": _data_da_modulo(
             moduli.get("chiusura_iscrizioni")),
         "lista_attesa": bool(moduli.get("lista_attesa")),
-        "avvisi_a": moduli.get("avvisi_a", "").strip(),
     }
 
 
@@ -560,14 +571,11 @@ def duplica(numero):
     g.con.execute(
         "INSERT INTO manifestazione (codice, nome, sottotitolo, descrizione, "
         "  luogo, organizzatore, contatto_organizzatore, "
-        "  informativa_privacy, iscrizioni_aperte, lista_attesa, "
-        "  avvisi_a, creata_il) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)",
+        "  informativa_privacy, iscrizioni_aperte, lista_attesa, creata_il) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)",
         (codice, nome, m["sottotitolo"], m["descrizione"], m["luogo"],
          m["organizzatore"], m["contatto_organizzatore"],
-         m["informativa_privacy"], m["lista_attesa"],
-         (m["avvisi_a"] if "avvisi_a" in m.keys() else ""),
-         archivio.adesso()))
+         m["informativa_privacy"], m["lista_attesa"], archivio.adesso()))
     copia = archivio.manifestazione_per_codice(g.con, codice)
     quante = 0
     for a in archivio.attivita_di(g.con, numero, solo_attive=False):

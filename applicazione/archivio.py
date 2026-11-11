@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS manifestazione (
     iscrizioni_aperte       INTEGER NOT NULL DEFAULT 1,
     chiusura_iscrizioni     TEXT,
     lista_attesa            INTEGER NOT NULL DEFAULT 1,
-    avvisi_a                TEXT    NOT NULL DEFAULT '',
     creata_il               TEXT    NOT NULL
 );
 
@@ -114,19 +113,51 @@ def connessione():
 # Colonne aggiunte dopo che il programma era gia' in uso. Si aggiungono
 # da sole al primo avvio: nessun dato viene toccato, e un archivio gia'
 # aggiornato non se ne accorge nemmeno.
-COLONNE_AGGIUNTE = (
-    ("manifestazione", "avvisi_a", "TEXT NOT NULL DEFAULT ''"),
+COLONNE_AGGIUNTE = ()
+
+# Colonne di cose che non si fanno piu'. Si tolgono SOLO se sono vuote
+# dappertutto: nessun dato scritto da qualcuno viene buttato in silenzio
+# per una scelta di programmazione.
+COLONNE_DA_TOGLIERE = (
+    # L'avviso per email, tolto il 02/11/2026: l'utente ha scelto
+    # l'avviso sul telefono e la posta non gli serviva.
+    ("manifestazione", "avvisi_a"),
 )
+
+
+def _colonne(con, tabella):
+    return [riga["name"] for riga in
+            con.execute("PRAGMA table_info(%s)" % tabella).fetchall()]
 
 
 def _aggiungi_colonne_mancanti(con):
     for tabella, colonna, tipo in COLONNE_AGGIUNTE:
-        esistenti = [riga["name"] for riga in
-                     con.execute("PRAGMA table_info(%s)" % tabella).fetchall()]
-        if colonna not in esistenti:
+        if colonna not in _colonne(con, tabella):
             con.execute("ALTER TABLE %s ADD COLUMN %s %s"
                         % (tabella, colonna, tipo))
             print("  archivio: aggiunta la colonna %s.%s" % (tabella, colonna))
+
+
+def _togli_colonne_in_disuso(con):
+    for tabella, colonna in COLONNE_DA_TOGLIERE:
+        if colonna not in _colonne(con, tabella):
+            continue
+        scritte = con.execute(
+            "SELECT COUNT(*) AS q FROM %s "
+            " WHERE %s IS NOT NULL AND TRIM(%s) <> ''"
+            % (tabella, colonna, colonna)).fetchone()["q"]
+        if scritte:
+            print("  archivio: la colonna %s.%s non si usa piu' ma contiene "
+                  "%d valori scritti: NON la tolgo." % (tabella, colonna,
+                                                        scritte))
+            continue
+        try:
+            con.execute("ALTER TABLE %s DROP COLUMN %s" % (tabella, colonna))
+            print("  archivio: tolta la colonna %s.%s, non serviva piu'"
+                  % (tabella, colonna))
+        except sqlite3.OperationalError as motivo:
+            print("  archivio: non sono riuscito a togliere %s.%s (%s). "
+                  "Resta li', non da' fastidio." % (tabella, colonna, motivo))
 
 
 def prepara():
@@ -135,6 +166,7 @@ def prepara():
     try:
         con.executescript(SCHEMA)
         _aggiungi_colonne_mancanti(con)
+        _togli_colonne_in_disuso(con)
     finally:
         con.close()
 
