@@ -118,6 +118,14 @@ COLONNE_AGGIUNTE = ()
 # Colonne di cose che non si fanno piu'. Si tolgono SOLO se sono vuote
 # dappertutto: nessun dato scritto da qualcuno viene buttato in silenzio
 # per una scelta di programmazione.
+# Righe di impostazioni che non servono piu'. Sono annotazioni del
+# programma su se stesso, non roba scritta da una persona: si tolgono.
+IMPOSTAZIONI_IN_DISUSO = (
+    # La campanella delle iscrizioni nuove, tolta il 02/11/2026: diceva
+    # una cosa che si vede gia' aprendo la pagina.
+    "viste_fino_a_%",
+)
+
 COLONNE_DA_TOGLIERE = (
     # L'avviso per email, tolto il 02/11/2026: l'utente ha scelto
     # l'avviso sul telefono e la posta non gli serviva.
@@ -160,6 +168,18 @@ def _togli_colonne_in_disuso(con):
                   "Resta li', non da' fastidio." % (tabella, colonna, motivo))
 
 
+def _togli_impostazioni_in_disuso(con):
+    for modello in IMPOSTAZIONI_IN_DISUSO:
+        quante = con.execute(
+            "SELECT COUNT(*) AS q FROM impostazione WHERE chiave LIKE ?",
+            (modello,)).fetchone()["q"]
+        if quante:
+            con.execute("DELETE FROM impostazione WHERE chiave LIKE ?",
+                        (modello,))
+            print("  archivio: tolte %d impostazioni «%s», non servono piu'"
+                  % (quante, modello))
+
+
 def prepara():
     """Crea le tabelle se non esistono. Si chiama ad ogni avvio."""
     con = connessione()
@@ -167,6 +187,7 @@ def prepara():
         con.executescript(SCHEMA)
         _aggiungi_colonne_mancanti(con)
         _togli_colonne_in_disuso(con)
+        _togli_impostazioni_in_disuso(con)
     finally:
         con.close()
 
@@ -452,40 +473,6 @@ def ricompatta(con):
     davvero.
     """
     con.execute("VACUUM")
-
-
-# ------------------------------------------------------- la campanella
-
-CHIAVE_VISTE = "viste_fino_a_%d"
-
-
-def nuove_da_quando_hai_guardato(con, manifestazione_id):
-    """Quante iscrizioni sono arrivate da quando si e' guardato l'elenco.
-
-    Se non si e' mai guardato, contano tutte: e' la risposta onesta.
-    """
-    quando = impostazione(con, CHIAVE_VISTE % manifestazione_id, "")
-    sql = ("SELECT COUNT(*) AS q FROM iscrizione "
-           " WHERE manifestazione_id = ? AND stato = 'confermata'")
-    parametri = [manifestazione_id]
-    if quando:
-        sql += " AND creata_il > ?"
-        parametri.append(quando)
-    return con.execute(sql, parametri).fetchone()["q"]
-
-
-def segna_come_viste(con, manifestazione_id):
-    """Da adesso le iscrizioni gia' arrivate non sono piu' «nuove»."""
-    scrivi_impostazione(con, CHIAVE_VISTE % manifestazione_id, adesso())
-
-
-def nuove_in_tutto(con):
-    """Il numero che va sulla campanella: la somma su tutte le
-    manifestazioni con le iscrizioni aperte o appena chiuse."""
-    totale = 0
-    for riga in manifestazioni(con):
-        totale += nuove_da_quando_hai_guardato(con, riga["id"])
-    return totale
 
 
 def nuovo_codice_conferma(con, lunghezza):

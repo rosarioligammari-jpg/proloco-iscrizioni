@@ -10,13 +10,6 @@
     <nav class="barra">
       <a href="{{ url_for('riservato.elenco') }}">Tutte le manifestazioni</a>
       <a href="{{ url_for('riservato.avvisi_telefono') }}">Avvisi sul telefono</a>
-      {% if nuove_totali %}
-        <span class="campanella" title="Iscrizioni arrivate da quando hai guardato">
-          <span class="campanella-segno" aria-hidden="true">&#128276;</span>
-          <strong>{{ nuove_totali }}</strong>
-          {{ 'nuova' if nuove_totali == 1 else 'nuove' }}
-        </span>
-      {% endif %}
       <form method="post" action="{{ url_for('riservato.uscita') }}">
         <button type="submit" class="collegamento">Esci</button>
       </form>

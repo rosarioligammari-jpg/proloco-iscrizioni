@@ -59,11 +59,7 @@ def stato_degli_avvisi():
         canale = archivio.impostazione(g.con, avvisi.CHIAVE_CANALE, "")
     except Exception:
         canale = ""
-    try:
-        nuove = archivio.nuove_in_tutto(g.con)
-    except Exception:
-        nuove = 0
-    return {"avvisi_spenti": not canale, "nuove_totali": nuove}
+    return {"avvisi_spenti": not canale}
 
 
 def _bloccato():
@@ -196,9 +192,7 @@ def elenco():
     prospetto = []
     for m in righe:
         totali = archivio.totali_manifestazione(g.con, m["id"])
-        prospetto.append({
-            "m": m, "totali": totali,
-            "nuove": archivio.nuove_da_quando_hai_guardato(g.con, m["id"])})
+        prospetto.append({"m": m, "totali": totali})
     return render_template("riservato/elenco.html", manifestazioni=prospetto)
 
 
@@ -208,10 +202,6 @@ def manifestazione(numero):
     m = archivio.manifestazione_per_id(g.con, numero)
     if m is None:
         abort(404)
-    # Prima si conta quante erano nuove, poi si segna che le hai viste:
-    # cosi' la pagina te lo dice, e alla prossima apertura riparte da zero.
-    nuove = archivio.nuove_da_quando_hai_guardato(g.con, numero)
-    archivio.segna_come_viste(g.con, numero)
     return render_template(
         "riservato/manifestazione.html",
         m=m,
@@ -221,7 +211,6 @@ def manifestazione(numero):
         # cancellarle.
         iscrizioni=archivio.prospetto_iscrizioni(g.con, numero,
                                                  includi_annullate=True),
-        nuove=nuove,
         totali=archivio.totali_manifestazione(g.con, numero),
         indirizzo_pubblico=url_for("pubblico.manifestazione",
                                    codice=m["codice"], _external=True))

@@ -187,52 +187,5 @@ class ProvaAvvisoDiAvvisiSpenti(ProvaBase):
         self.assertNotIn("avvisi sul telefono sono spenti", pagina)
 
 
-class ProvaCampanella(ProvaBase):
-    """Il numero delle iscrizioni arrivate da quando si e' guardato."""
-
-    def entra(self):
-        self.cliente.post("/riservato/entrata",
-                          data={"password": "proloco2026",
-                                "ripetuta": "proloco2026"})
-
-    def test_le_iscrizioni_mai_guardate_contano_tutte(self):
-        self.iscrivi(gettone="una")
-        self.iscrivi(gettone="due", nome="Anna")
-        self.entra()
-        pagina = self.cliente.get("/riservato/").get_data(as_text=True)
-        self.assertIn("2", pagina)
-        self.assertIn("da quando hai guardato", pagina)
-
-    def test_il_numero_compare_anche_nel_titolo_della_scheda(self):
-        self.iscrivi()
-        self.entra()
-        pagina = self.cliente.get("/riservato/").get_data(as_text=True)
-        self.assertIn("<title>(1)", pagina)
-
-    def test_aperta_la_manifestazione_il_conto_riparte_da_zero(self):
-        self.iscrivi()
-        self.entra()
-        prima = self.cliente.get("/riservato/manifestazione/%d"
-                                 % self.manifestazione_id).get_data(
-                                     as_text=True)
-        self.assertIn("da quando hai guardato", prima)
-        dopo = self.cliente.get("/riservato/").get_data(as_text=True)
-        self.assertNotIn("da quando hai guardato", dopo)
-
-    def test_una_nuova_iscrizione_fa_ripartire_il_conto(self):
-        self.entra()
-        self.cliente.get("/riservato/manifestazione/%d"
-                         % self.manifestazione_id)
-        self.iscrivi(gettone="dopo")
-        pagina = self.cliente.get("/riservato/").get_data(as_text=True)
-        self.assertIn("da quando hai guardato", pagina)
-
-    def test_senza_niente_di_nuovo_la_campanella_non_compare(self):
-        self.entra()
-        pagina = self.cliente.get("/riservato/").get_data(as_text=True)
-        self.assertNotIn("da quando hai guardato", pagina)
-        self.assertNotIn("<title>(", pagina)
-
-
 if __name__ == "__main__":
     unittest.main()
