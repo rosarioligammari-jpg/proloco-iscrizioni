@@ -5,6 +5,16 @@
 
 {% block contenuto_riservato %}
 
+  {% if nuove %}
+    <div class="avviso verde">
+      <p>&#128276; <strong>{{ nuove }}</strong>
+        {{ 'nuova iscrizione' if nuove == 1 else 'nuove iscrizioni' }}
+        da quando hai guardato l'ultima volta:
+        {{ 'la trovi' if nuove == 1 else 'le trovi' }} in fondo all'elenco
+        degli iscritti.</p>
+    </div>
+  {% endif %}
+
   <section class="scheda">
     <h2>Quanti saremo</h2>
     <ul class="numeri grandi">

@@ -14,6 +14,7 @@
     {% for voce in manifestazioni %}
       {% set m = voce.m %}
       {% set t = voce.totali %}
+      {% set nuove = voce.nuove %}
       <section class="scheda">
         <h2><a href="{{ url_for('riservato.manifestazione', numero=m.id) }}">{{ m.nome }}</a></h2>
         <p class="quando">
@@ -32,6 +33,11 @@
             <span class="aiuto">chiusura prevista il {{ m.chiusura_iscrizioni|data_italiana }}</span>
           {% endif %}
         </p>
+
+        {% if nuove %}
+          <p><span class="etichetta verde">&#128276; {{ nuove }}
+            {{ 'nuova' if nuove == 1 else 'nuove' }} da quando hai guardato</span></p>
+        {% endif %}
 
         <ul class="numeri">
           <li><strong>{{ t.persone }}</strong> {{ 'persona' if t.persone == 1 else 'persone' }}</li>

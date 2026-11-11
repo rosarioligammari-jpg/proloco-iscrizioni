@@ -454,6 +454,40 @@ def ricompatta(con):
     con.execute("VACUUM")
 
 
+# ------------------------------------------------------- la campanella
+
+CHIAVE_VISTE = "viste_fino_a_%d"
+
+
+def nuove_da_quando_hai_guardato(con, manifestazione_id):
+    """Quante iscrizioni sono arrivate da quando si e' guardato l'elenco.
+
+    Se non si e' mai guardato, contano tutte: e' la risposta onesta.
+    """
+    quando = impostazione(con, CHIAVE_VISTE % manifestazione_id, "")
+    sql = ("SELECT COUNT(*) AS q FROM iscrizione "
+           " WHERE manifestazione_id = ? AND stato = 'confermata'")
+    parametri = [manifestazione_id]
+    if quando:
+        sql += " AND creata_il > ?"
+        parametri.append(quando)
+    return con.execute(sql, parametri).fetchone()["q"]
+
+
+def segna_come_viste(con, manifestazione_id):
+    """Da adesso le iscrizioni gia' arrivate non sono piu' «nuove»."""
+    scrivi_impostazione(con, CHIAVE_VISTE % manifestazione_id, adesso())
+
+
+def nuove_in_tutto(con):
+    """Il numero che va sulla campanella: la somma su tutte le
+    manifestazioni con le iscrizioni aperte o appena chiuse."""
+    totale = 0
+    for riga in manifestazioni(con):
+        totale += nuove_da_quando_hai_guardato(con, riga["id"])
+    return totale
+
+
 def nuovo_codice_conferma(con, lunghezza):
     """Codice breve, leggibile al telefono: niente O/0 ne' I/1."""
     alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"

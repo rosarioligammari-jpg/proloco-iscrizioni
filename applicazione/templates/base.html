@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titolo %}{{ titolo_scheda }}{% endblock %}</title>
+  <title>{% if nuove_totali | default(0) %}({{ nuove_totali }}) {% endif %}{% block titolo %}{{ titolo_scheda }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='stile.css') }}">
 </head>
 <body>

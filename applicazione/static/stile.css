@@ -582,3 +582,18 @@ a.collegamento.pericoloso { color: var(--rosso); }
   border-color: var(--rosso);
 }
 .pulsante.secondario.pericoloso:hover { background: var(--rosso-sfondo); }
+
+/* ------------------------------------------------------- la campanella */
+
+.campanella {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .15rem .6rem;
+  border-radius: 999px;
+  background: var(--verde-sfondo);
+  color: var(--verde);
+  font-size: .9rem;
+  font-weight: 600;
+}
+.campanella-segno { font-size: 1rem; }
