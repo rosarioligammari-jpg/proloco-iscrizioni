@@ -12,7 +12,7 @@
     </div>
   {% endif %}
 
-  <form method="post" novalidate>
+  <form method="post" novalidate enctype="multipart/form-data">
 
     <section class="scheda">
       <h2>Che manifestazione è</h2>
@@ -99,6 +99,22 @@
         </label>
       </p>
     </section>
+
+    {% if m %}
+      <section class="scheda">
+        <h2>La locandina</h2>
+        <p class="aiuto sopra-elenco">Compare come <strong>banda colorata sul
+          lato dei biglietti</strong>, così si riconosce al volo di quale
+          manifestazione sono. Non compare nella pagina pubblica.</p>
+        <p class="campo">
+          <label for="locandina">Immagine della locandina</label>
+          <input type="file" id="locandina" name="locandina"
+                 accept="image/png, image/jpeg, image/gif, image/webp">
+          <span class="aiuto">PNG, JPG, GIF o WEBP, fino a 5 MB. Caricandone
+            una nuova, quella di prima viene sostituita.</span>
+        </p>
+      </section>
+    {% endif %}
 
     <section class="scheda">
       <h2>Informativa privacy <span class="obbligatorio">*</span></h2>

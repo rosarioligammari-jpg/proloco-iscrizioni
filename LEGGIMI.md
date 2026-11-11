@@ -178,6 +178,46 @@ doppio clic, la chiusura delle iscrizioni e gli accenti nelle pagine.
 
 ---
 
+## I biglietti del giorno della manifestazione
+
+Nella scheda della manifestazione: **«Biglietti da stampare»**.
+
+**Un biglietto per persona**, in ordine di iscrizione, con i **tagliandi**
+da staccare al banco (`Pasto, Bibita`, o quello che scrivi tu).
+
+- il **numero è progressivo e non si ripete mai**: è quello che permette
+  di dire «il 47 ha già ritirato». Anche i biglietti in bianco per chi si
+  presenta senza essersi iscritto continuano la stessa numerazione;
+- un **gruppo di quattro fa quattro biglietti**: se il capogruppo ha
+  scritto i nomi, ognuno porta il suo; altrimenti il primo porta il
+  referente e gli altri dicono «2 di 4», «3 di 4»;
+- si può stampare **solo per chi partecipa a una certa attività**;
+- le iscrizioni **annullate non fanno biglietto**.
+
+Si stampa dal browser: **dieci per foglio A4**, con le linee tratteggiate
+da tagliare. Dalla stessa finestra di stampa si può scegliere «Salva come
+PDF» per portarli in tipografia.
+
+### La locandina sul biglietto
+
+Si carica da **«Modifica i dati»** della manifestazione e compare come
+**banda colorata sul lato** del biglietto: si riconosce al volo di quale
+manifestazione sono, e il numero con i tagliandi restano puliti.
+
+Non si mette la locandina intera dietro al testo, ed è una scelta: la
+locandina è fatta per essere vista da tre metri su un muro, il biglietto
+per essere letto in mezzo secondo a un banco, con le mani unte. Uno
+sfondo pieno fa litigare la grafica con le uniche due cose che al banco
+servono davvero — **il numero e i tagliandi** — e costa molto inchiostro
+su qualche centinaio di copie.
+
+Il file sta in `dati/locandine/`, fuori dal codice e fuori da GitHub.
+Vanno bene PNG, JPG, GIF e WEBP fino a 5 MB; un file che **non è**
+un'immagine viene rifiutato anche se si chiama `.png`, perché il
+programma guarda il contenuto e non il nome.
+
+---
+
 ## L'avviso sul telefono
 
 Area riservata → **«Avvisi sul telefono»**. Ogni volta che qualcuno si

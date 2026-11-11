@@ -726,3 +726,45 @@ a.collegamento.pericoloso { color: var(--rosso); }
     border: .2mm dashed #666;
   }
 }
+
+/* ------------------------------------------- la locandina sul biglietto */
+
+/* La banda sul lato: fa riconoscere la manifestazione a colpo d'occhio
+   senza litigare con il numero e i tagliandi, che al banco sono le
+   uniche due cose che servono davvero. */
+.biglietto.con-banda { padding-left: 24mm; }
+
+.biglietto-banda {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20mm;
+  object-fit: cover;
+  border-right: .3mm solid #000;
+  border-radius: 2mm 0 0 2mm;
+}
+
+.locandina-piccola {
+  max-width: 200px;
+  max-height: 280px;
+  border: 1px solid var(--bordo);
+  border-radius: 8px;
+}
+
+.campo input[type="file"] {
+  width: 100%;
+  padding: .6rem 0;
+  font: inherit;
+}
+
+@media print {
+  /* Senza questo i browser «risparmiano inchiostro» e la banda esce
+     bianca: su un biglietto e' proprio la cosa che si vuole stampare. */
+  body, .biglietto, .biglietto-banda {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .biglietto.con-banda { padding-left: 25mm; }
+  .biglietto-banda { border-radius: 0; }
+}

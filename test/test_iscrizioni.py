@@ -29,8 +29,12 @@ class ProvaBase(unittest.TestCase):
         # si azzera a ogni prova, altrimenti una prova blocca la seguente.
         from applicazione import pubblico
         pubblico._INVII_RECENTI.clear()
+        # Ogni modulo che scrive su disco va deviato nella cartella
+        # temporanea: se se ne dimentica uno, le prove sporcano i dati veri.
+        from applicazione import locandine
         archivio.CARTELLA_DATI = self.cartella
         applicazione.CARTELLA_DATI = self.cartella
+        locandine.CARTELLA_DATI = self.cartella
         archivio.prepara()
 
         self.app = applicazione.crea_applicazione()

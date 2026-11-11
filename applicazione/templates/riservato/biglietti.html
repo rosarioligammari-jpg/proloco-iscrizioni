@@ -60,6 +60,15 @@
     </p>
   </form>
 
+  {% if not c_e_la_locandina %}
+    <div class="avviso arancione senza-stampa">
+      <p>Nessuna locandina caricata: i biglietti escono senza la banda
+        colorata. Si carica da
+        <a href="{{ url_for('riservato.modifica_manifestazione', numero=m.id) }}">Modifica
+        i dati</a> della manifestazione.</p>
+    </div>
+  {% endif %}
+
   <section class="scheda senza-stampa">
     <h2>Pronti da stampare</h2>
     <ul class="numeri grandi">
@@ -84,7 +93,11 @@
   {% if voci %}
     <div class="foglio-biglietti">
       {% for v in voci %}
-        <div class="biglietto {{ 'in-bianco' if v.bianco }}">
+        <div class="biglietto {{ 'in-bianco' if v.bianco }}{{ ' con-banda' if c_e_la_locandina }}">
+          {% if c_e_la_locandina %}
+            <img class="biglietto-banda"
+                 src="{{ url_for('riservato.locandina', numero=m.id) }}" alt="">
+          {% endif %}
           <div class="biglietto-testa">
             <span class="biglietto-numero">{{ v.numero }}</span>
             <span class="biglietto-manifestazione">{{ m.nome }}{% if m.data_inizio %}

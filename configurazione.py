@@ -98,6 +98,13 @@ DIETRO_UN_PROXY = _acceso("ISCRIZIONI_DIETRO_PROXY", False)
 # quelli la difesa vera e' il campo-trappola nel modulo.
 INVII_AL_MINUTO = _numero("ISCRIZIONI_INVII_AL_MINUTO", 20)
 
-# Dimensione massima di un invio. Oltre, la richiesta viene rifiutata.
+# Dimensione massima di un'ISCRIZIONE inviata dal modulo pubblico.
+# Resta stretta apposta: in un'iscrizione c'e' solo testo.
 DIMENSIONE_MASSIMA_INVIO = _numero("ISCRIZIONI_DIMENSIONE_MASSIMA",
                                    512 * 1024)
+
+# Dimensione massima della LOCANDINA caricata dall'area riservata.
+# Qui serve piu' spazio: e' un'immagine. La carica solo chi ha la
+# password, non il pubblico.
+DIMENSIONE_MASSIMA_LOCANDINA = _numero("ISCRIZIONI_DIMENSIONE_LOCANDINA",
+                                       5 * 1024 * 1024)

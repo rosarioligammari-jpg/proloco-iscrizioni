@@ -7,6 +7,7 @@ from flask import Flask, g
 
 from configurazione import (CARTELLA_DATI, COLLEGAMENTO_SICURO,
                             DIETRO_UN_PROXY, DIMENSIONE_MASSIMA_INVIO,
+                            DIMENSIONE_MASSIMA_LOCANDINA,
                             ENTE, NOMI_FILE_LOGO, NOME_FILE_CHIAVE,
                             TITOLO_SCHEDA, NOME_PROGRAMMA)
 from applicazione import archivio, formato
@@ -52,7 +53,11 @@ def crea_applicazione():
     app.config["TITOLO_SCHEDA"] = TITOLO_SCHEDA
     app.config["NOME_PROGRAMMA"] = NOME_PROGRAMMA
     app.config["JSON_AS_ASCII"] = False
-    app.config["MAX_CONTENT_LENGTH"] = DIMENSIONE_MASSIMA_INVIO
+    # Il tetto generale deve lasciar passare la locandina, che e'
+    # l'unica cosa grossa che si carica. Il modulo pubblico ha il suo
+    # limite, piu' stretto, e se lo controlla da se'.
+    app.config["MAX_CONTENT_LENGTH"] = max(DIMENSIONE_MASSIMA_INVIO,
+                                           DIMENSIONE_MASSIMA_LOCANDINA)
 
     # Il cookie dell'area riservata: mai leggibile dal JavaScript, mai
     # mandato a un altro sito, e solo cifrato quando siamo su https.

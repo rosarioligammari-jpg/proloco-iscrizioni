@@ -66,6 +66,24 @@
     </p>
   </section>
 
+  {% if c_e_la_locandina %}
+    <section class="scheda">
+      <h2>La locandina</h2>
+      <p class="aiuto">È la banda colorata sul lato dei biglietti.</p>
+      <p><img class="locandina-piccola"
+              src="{{ url_for('riservato.locandina', numero=m.id) }}"
+              alt="Locandina di {{ m.nome }}"></p>
+      <p class="azioni-in-riga">
+        <a class="pulsante piccolo secondario"
+           href="{{ url_for('riservato.modifica_manifestazione', numero=m.id) }}">Sostituiscila</a>
+        <form method="post"
+              action="{{ url_for('riservato.togli_locandina', numero=m.id) }}">
+          <button type="submit" class="collegamento pericoloso">togli la locandina</button>
+        </form>
+      </p>
+    </section>
+  {% endif %}
+
   <section class="scheda">
     <h2>Le attività</h2>
 

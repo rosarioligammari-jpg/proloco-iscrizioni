@@ -18,10 +18,11 @@ from datetime import datetime
 from functools import wraps
 
 from flask import (Blueprint, Response, abort, flash, g, redirect,
-                   render_template, request, session, url_for)
+                   render_template, request, send_file, session,
+                   url_for)
 
 from configurazione import ENTE
-from applicazione import archivio, avvisi
+from applicazione import archivio, avvisi, locandine
 from applicazione.formato import oggi_iso
 
 riservato = Blueprint("riservato", __name__, url_prefix="/riservato")
@@ -213,7 +214,8 @@ def manifestazione(numero):
                                                  includi_annullate=True),
         totali=archivio.totali_manifestazione(g.con, numero),
         indirizzo_pubblico=url_for("pubblico.manifestazione",
-                                   codice=m["codice"], _external=True))
+                                   codice=m["codice"], _external=True),
+        c_e_la_locandina=locandine.percorso(numero) is not None)
 
 
 # ------------------------------------------------- i biglietti da stampare
@@ -295,7 +297,8 @@ def biglietti(numero):
         tagliandi_scritti=tagliandi_scritti, quanti_bianchi=quanti_bianchi,
         solo_attivita=solo_attivita,
         attivita=archivio.attivita_di(g.con, numero, solo_attive=False),
-        quanti_iscritti=len([v for v in voci if not v["bianco"]]))
+        quanti_iscritti=len([v for v in voci if not v["bianco"]]),
+        c_e_la_locandina=locandine.percorso(numero) is not None)
 
 
 # --------------------------------------------- avvisi sul telefono (ntfy)
@@ -427,6 +430,7 @@ def modifica_manifestazione(numero):
              1 if valori["iscrizioni_aperte"] else 0,
              valori["chiusura_iscrizioni"],
              1 if valori["lista_attesa"] else 0, numero))
+        _salva_la_locandina(numero)
         flash("Salvato: «%s»." % valori["nome"], "fatto")
         return redirect(url_for("riservato.manifestazione", numero=numero))
 
@@ -453,6 +457,45 @@ def informativa_predefinita():
         "Puoi chiedere in qualunque momento di vedere, correggere o "
         "cancellare i tuoi dati scrivendo agli organizzatori ai contatti "
         "indicati in questa pagina." % ENTE)
+
+
+def _salva_la_locandina(manifestazione_id):
+    """Mette da parte la locandina, se nel modulo ne e' arrivata una.
+
+    Se il file non va bene lo dice e tiene quella di prima: una locandina
+    rifiutata non deve far perdere le modifiche appena scritte.
+    """
+    arrivato = request.files.get("locandina")
+    if arrivato is None or not arrivato.filename:
+        return
+    try:
+        locandine.salva(manifestazione_id, arrivato.read())
+        flash("Locandina caricata: la troverai sui biglietti.", "fatto")
+    except locandine.LocandinaRifiutata as motivo:
+        flash("Locandina non caricata. %s" % motivo, "errore")
+
+
+@riservato.route("/manifestazione/<int:numero>/locandina")
+@serve_entrata
+def locandina(numero):
+    """Mostra la locandina. Sta dietro la password come tutto il resto."""
+    file_locandina = locandine.percorso(numero)
+    if file_locandina is None:
+        abort(404)
+    return send_file(str(file_locandina),
+                     mimetype=locandine.tipo_per_il_browser(file_locandina))
+
+
+@riservato.route("/manifestazione/<int:numero>/locandina/togli",
+                 methods=["POST"])
+@serve_entrata
+def togli_locandina(numero):
+    if locandine.togli(numero):
+        flash("Locandina tolta. I biglietti torneranno senza immagine.",
+              "fatto")
+    else:
+        flash("Non c'era nessuna locandina da togliere.", "errore")
+    return redirect(url_for("riservato.manifestazione", numero=numero))
 
 
 def _valori_vuoti():

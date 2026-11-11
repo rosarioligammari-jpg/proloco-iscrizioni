@@ -10,7 +10,8 @@ from datetime import datetime, timedelta
 from flask import (Blueprint, abort, g, redirect, render_template, request,
                    url_for)
 
-from configurazione import (INVII_AL_MINUTO, LUNGHEZZA_CODICE_CONFERMA,
+from configurazione import (DIMENSIONE_MASSIMA_INVIO, INVII_AL_MINUTO,
+                            LUNGHEZZA_CODICE_CONFERMA,
                             MASSIMO_PERSONE_PER_GRUPPO)
 from applicazione import archivio, avvisi
 from applicazione.formato import oggi_iso, persone as dicitura_persone
@@ -174,6 +175,13 @@ def invia(codice):
     riga = archivio.manifestazione_per_codice(g.con, codice)
     if riga is None:
         abort(404)
+
+    # Un'iscrizione e' solo testo: se arriva qualcosa di grosso, non e'
+    # un'iscrizione. Il tetto generale del programma e' piu' alto perche'
+    # deve lasciar passare la locandina, che pero' si carica soltanto
+    # dall'area riservata.
+    if (request.content_length or 0) > DIMENSIONE_MASSIMA_INVIO:
+        return ("L'invio è troppo grande.", 413)
 
     valori = _valori_inviati()
 
