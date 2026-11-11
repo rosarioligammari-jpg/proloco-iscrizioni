@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS manifestazione (
     iscrizioni_aperte       INTEGER NOT NULL DEFAULT 1,
     chiusura_iscrizioni     TEXT,
     lista_attesa            INTEGER NOT NULL DEFAULT 1,
+    avvisi_a                TEXT    NOT NULL DEFAULT '',
     creata_il               TEXT    NOT NULL
 );
 
@@ -110,11 +111,30 @@ def connessione():
     return con
 
 
+# Colonne aggiunte dopo che il programma era gia' in uso. Si aggiungono
+# da sole al primo avvio: nessun dato viene toccato, e un archivio gia'
+# aggiornato non se ne accorge nemmeno.
+COLONNE_AGGIUNTE = (
+    ("manifestazione", "avvisi_a", "TEXT NOT NULL DEFAULT ''"),
+)
+
+
+def _aggiungi_colonne_mancanti(con):
+    for tabella, colonna, tipo in COLONNE_AGGIUNTE:
+        esistenti = [riga["name"] for riga in
+                     con.execute("PRAGMA table_info(%s)" % tabella).fetchall()]
+        if colonna not in esistenti:
+            con.execute("ALTER TABLE %s ADD COLUMN %s %s"
+                        % (tabella, colonna, tipo))
+            print("  archivio: aggiunta la colonna %s.%s" % (tabella, colonna))
+
+
 def prepara():
     """Crea le tabelle se non esistono. Si chiama ad ogni avvio."""
     con = connessione()
     try:
         con.executescript(SCHEMA)
+        _aggiungi_colonne_mancanti(con)
     finally:
         con.close()
 

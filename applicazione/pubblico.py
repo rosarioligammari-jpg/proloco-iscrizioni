@@ -12,8 +12,9 @@ from flask import (Blueprint, abort, g, redirect, render_template, request,
 
 from configurazione import (INVII_AL_MINUTO, LUNGHEZZA_CODICE_CONFERMA,
                             MASSIMO_PERSONE_PER_GRUPPO)
-from applicazione import archivio
-from applicazione.formato import oggi_iso
+from applicazione import archivio, posta
+from applicazione.formato import (data_ora_italiana, euro_secco,
+                                  oggi_iso, persone as dicitura_persone)
 
 pubblico = Blueprint("pubblico", __name__)
 
@@ -259,6 +260,18 @@ def invia(codice):
         con.execute("ROLLBACK")
         raise
 
+    # L'avviso agli organizzatori parte DOPO il salvataggio e in una
+    # finestra a parte: se la posta non va, l'iscrizione resta comunque.
+    # Anche preparare il messaggio e' protetto: nessun guaio qui dentro
+    # deve mai arrivare in faccia a chi si e' appena iscritto.
+    try:
+        _avvisa_organizzatori(riga, valori, numero_persone, scelte,
+                              codice_conferma)
+    except Exception:
+        import traceback
+        print("  [posta] non sono riuscito a preparare l'avviso:")
+        traceback.print_exc()
+
     return redirect(url_for("pubblico.iscritto", codice=codice,
                             codice_conferma=codice_conferma))
 
@@ -276,6 +289,90 @@ def iscritto(codice, codice_conferma):
                  for r in righe if r["stato"] == "confermata")
     return render_template("inviata.html", m=riga, iscrizione=iscrizione,
                            righe=righe, totale_centesimi=totale)
+
+
+# ------------------------------------------------- avviso agli organizzatori
+
+def _avvisa_organizzatori(manifestazione, valori, numero_persone, scelte,
+                          codice_conferma):
+    """Manda un'email agli organizzatori per ogni iscrizione nuova.
+
+    Nessun indirizzo scritto nella manifestazione = nessun avviso, e va
+    benissimo: e' una scelta, non un guasto.
+    """
+    destinatari = posta.indirizzi(manifestazione["avvisi_a"]
+                                  if "avvisi_a" in manifestazione.keys()
+                                  else "")
+    if not destinatari:
+        return
+
+    totali = archivio.totali_manifestazione(g.con, manifestazione["id"])
+
+    righe = []
+    quota = 0
+    for attivita, stato in scelte:
+        pezzo = "  - %s" % attivita["nome"]
+        if stato == "attesa":
+            pezzo += "   [IN LISTA D'ATTESA]"
+        pezzo += " (%s" % dicitura_persone(numero_persone)
+        if attivita["quota_centesimi"] and stato == "confermata":
+            totale_voce = attivita["quota_centesimi"] * numero_persone
+            quota += totale_voce
+            pezzo += ", %s" % euro_secco(totale_voce)
+        pezzo += ")"
+        righe.append(pezzo)
+
+    testo = ["Nuova iscrizione a «%s»." % manifestazione["nome"], ""]
+    testo.append("Chi:       %s %s" % (valori["nome"], valori["cognome"]))
+    if valori["gruppo_nome"]:
+        if valori["tipo"] == "gruppo":
+            testo.append("Gruppo:    %s (iscrive %s)"
+                         % (valori["gruppo_nome"],
+                            dicitura_persone(numero_persone)))
+        else:
+            testo.append("Gruppo:    %s" % valori["gruppo_nome"])
+    testo.append("Telefono:  %s" % valori["telefono"])
+    if valori["email"]:
+        testo.append("Email:     %s" % valori["email"])
+    testo.append("")
+    testo.append("Attività:")
+    testo.extend(righe)
+    if valori["nomi_partecipanti"]:
+        testo.append("")
+        testo.append("Partecipanti:")
+        for nome in valori["nomi_partecipanti"].splitlines():
+            if nome.strip():
+                testo.append("  - %s" % nome.strip())
+    if valori["note"]:
+        testo.append("")
+        testo.append("Note: %s" % valori["note"])
+    if quota:
+        testo.append("")
+        testo.append("Quota attesa: %s (si paga in loco)" % euro_secco(quota))
+    testo.append("")
+    testo.append("Codice dell'iscrizione: %s" % codice_conferma)
+    testo.append("Inviata il %s" % data_ora_italiana(archivio.adesso()))
+    testo.append("")
+    testo.append("A oggi: %d persone su %d iscrizioni."
+                 % (totali["persone"], totali["iscrizioni"]))
+    if totali["persone_solo_attesa"]:
+        testo.append("In lista d'attesa: %d persone."
+                     % totali["persone_solo_attesa"])
+    testo.append("")
+    testo.append("Elenco completo e totali:")
+    testo.append(url_for("riservato.manifestazione",
+                         numero=manifestazione["id"], _external=True))
+    testo.append("")
+    testo.append("--")
+    testo.append("Messaggio automatico del programma Iscrizioni.")
+    testo.append("Non rispondere a questo messaggio: per parlare con chi si")
+    testo.append("è iscritto usa il telefono scritto qui sopra.")
+
+    oggetto = "Nuova iscrizione · %s · %s %s (%s)" % (
+        manifestazione["nome"], valori["nome"], valori["cognome"],
+        dicitura_persone(numero_persone))
+
+    posta.spedisci_senza_far_danni(destinatari, oggetto, "\n".join(testo))
 
 
 # -------------------------------------------------------------- controlli
