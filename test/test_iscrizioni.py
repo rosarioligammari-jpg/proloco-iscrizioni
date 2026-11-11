@@ -353,6 +353,23 @@ class ProvaImpostazioniDiPubblicazione(ProvaBase):
         finally:
             applicazione.DIETRO_UN_PROXY = False
 
+    def test_acceso_il_collegamento_sicuro_i_link_nascono_in_https(self):
+        """Non tutti i tunnel dicono al programma che fuori c'e' https:
+        se l'impostazione e' accesa, i collegamenti che il programma
+        scrive da se' devono comunque nascere con https."""
+        applicazione.COLLEGAMENTO_SICURO = True
+        try:
+            app = applicazione.crea_applicazione()
+            app.config["TESTING"] = True
+            risposta = app.test_client().get("/salute")
+            self.assertEqual(risposta.get_json()["collegamento"], "https")
+        finally:
+            applicazione.COLLEGAMENTO_SICURO = False
+
+    def test_in_locale_il_programma_sa_di_stare_su_http(self):
+        self.assertEqual(
+            self.cliente.get("/salute").get_json()["collegamento"], "http")
+
     def test_un_invio_enorme_viene_rifiutato(self):
         from configurazione import DIMENSIONE_MASSIMA_INVIO
         risposta = self.iscrivi(note="x" * (DIMENSIONE_MASSIMA_INVIO + 10))

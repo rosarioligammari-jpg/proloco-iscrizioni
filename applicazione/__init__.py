@@ -35,6 +35,14 @@ def chiave_segreta():
     return percorso.read_text(encoding="utf-8").strip()
 
 
+def _sempre_sicuro(applicazione_sotto):
+    """Dice al programma che fuori si viaggia su https."""
+    def involucro(ambiente, inizia_risposta):
+        ambiente["wsgi.url_scheme"] = "https"
+        return applicazione_sotto(ambiente, inizia_risposta)
+    return involucro
+
+
 def crea_applicazione():
     app = Flask(__name__,
                 template_folder="templates",
@@ -59,6 +67,15 @@ def crea_applicazione():
         from werkzeug.middleware.proxy_fix import ProxyFix
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1,
                                 x_host=1, x_prefix=1)
+
+    if COLLEGAMENTO_SICURO:
+        # Non tutti i tunnel dicono al programma che fuori si viaggia su
+        # https: il tunnel di Cloudflare, per esempio, gli parla in http
+        # e l'informazione va persa. Il programma allora scriveva da se'
+        # dei collegamenti «http://...» dentro gli avvisi.
+        # COLLEGAMENTO_SICURO vuol dire «l'indirizzo pubblico e' https»:
+        # se e' acceso, lo si dice al programma e non si discute.
+        app.wsgi_app = _sempre_sicuro(app.wsgi_app)
 
     archivio.prepara()
     formato.registra_filtri(app)
