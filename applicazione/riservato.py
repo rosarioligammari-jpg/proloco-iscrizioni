@@ -19,7 +19,7 @@ from flask import (Blueprint, Response, abort, flash, g, redirect,
                    render_template, request, session, url_for)
 
 from configurazione import ENTE
-from applicazione import archivio
+from applicazione import archivio, avvisi
 from applicazione.formato import oggi_iso
 
 riservato = Blueprint("riservato", __name__, url_prefix="/riservato")
@@ -193,6 +193,73 @@ def manifestazione(numero):
         totali=archivio.totali_manifestazione(g.con, numero),
         indirizzo_pubblico=url_for("pubblico.manifestazione",
                                    codice=m["codice"], _external=True))
+
+
+# --------------------------------------------- avvisi sul telefono (ntfy)
+
+@riservato.route("/avvisi", methods=["GET", "POST"])
+@serve_entrata
+def avvisi_telefono():
+    """Dove si dice a quale canale mandare gli avvisi sul telefono.
+
+    È un'impostazione sola per tutto il programma, non per singola
+    manifestazione: il telefono che deve squillare è sempre quello.
+    """
+    canale = archivio.impostazione(g.con, avvisi.CHIAVE_CANALE, "")
+    server = archivio.impostazione(g.con, avvisi.CHIAVE_SERVER,
+                                   avvisi.SERVER_PREDEFINITO)
+
+    if request.method == "POST":
+        if request.form.get("azione") == "prova":
+            if not canale:
+                flash("Prima salva il canale, poi si può fare la prova.",
+                      "errore")
+            else:
+                try:
+                    avvisi.manda(
+                        server, canale, "Prova degli avvisi",
+                        "Se leggi questo messaggio sul telefono, gli avvisi "
+                        "funzionano.",
+                        collegamento=url_for("riservato.elenco",
+                                             _external=True),
+                        etichette=["white_check_mark"])
+                    flash("Avviso di prova mandato. Deve comparire sul "
+                          "telefono entro pochi secondi.", "fatto")
+                except avvisi.AvvisoSpento as motivo:
+                    flash("Non sono riuscito a mandarlo: %s" % motivo,
+                          "errore")
+            return redirect(url_for("riservato.avvisi_telefono"))
+
+        nuovo_canale = request.form.get("canale", "").strip()
+        nuovo_server = (request.form.get("server", "").strip()
+                        or avvisi.SERVER_PREDEFINITO)
+        if nuovo_canale and not re.match(r"^[A-Za-z0-9_-]{6,64}$",
+                                         nuovo_canale):
+            flash("Il nome del canale può avere solo lettere, numeri, "
+                  "trattini e trattini bassi, da 6 a 64 caratteri.", "errore")
+        elif not nuovo_server.startswith(("http://", "https://")):
+            flash("L'indirizzo del servizio deve cominciare con https://",
+                  "errore")
+        else:
+            archivio.scrivi_impostazione(g.con, avvisi.CHIAVE_CANALE,
+                                         nuovo_canale)
+            archivio.scrivi_impostazione(g.con, avvisi.CHIAVE_SERVER,
+                                         nuovo_server)
+            if nuovo_canale:
+                flash("Salvato. Gli avvisi andranno al canale «%s»."
+                      % nuovo_canale, "fatto")
+            else:
+                flash("Salvato: nessun avviso sul telefono.", "fatto")
+            return redirect(url_for("riservato.avvisi_telefono"))
+
+    return render_template(
+        "riservato/avvisi.html",
+        canale=canale,
+        proposta=avvisi.canale_nuovo(),
+        server=server,
+        server_predefinito=avvisi.SERVER_PREDEFINITO,
+        indirizzo=(avvisi.indirizzo_canale(server, canale)
+                   if canale else ""))
 
 
 # ------------------------------------------------- creare e modificare

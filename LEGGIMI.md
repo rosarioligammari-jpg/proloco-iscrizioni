@@ -149,7 +149,44 @@ doppio clic, la chiusura delle iscrizioni e gli accenti nelle pagine.
 
 ---
 
-## L'avviso a ogni iscrizione
+## L'avviso sul telefono
+
+Area riservata → **«Avvisi sul telefono»**. Ogni volta che qualcuno si
+iscrive, il telefono squilla con un avviso tipo:
+
+> **Motor Village Fest · nuova iscrizione**
+> 4 persone · Pranzo sociale, Gimkana a tempo
+> Siamo in 37, su 12 iscrizioni.
+
+Toccandolo si apre l'elenco completo nell'area riservata.
+
+### Come si imposta, una volta sola
+
+1. sul telefono si installa l'app gratuita **ntfy** (App Store o Play Store);
+2. nella pagina «Avvisi sul telefono» si salva il **nome del canale** (ce
+   n'è già uno pronto, con dentro una parte casuale);
+3. nell'app si tocca **«+»** e si scrive **lo stesso nome**, identico;
+4. si torna nella pagina e si preme **«Manda un avviso di prova»**.
+
+Il nome del canale è l'unica cosa che protegge gli avvisi: chi lo conosce
+li riceve. Non va scritto in pubblico. Per cambiarlo basta salvarne uno
+nuovo e rifare il passo 3.
+
+### Perché nell'avviso non ci sono i nomi
+
+Chi si iscrive firma un'informativa che dice che **i suoi dati non vengono
+comunicati a terzi**. Se nell'avviso mettessimo nome e telefono, quei dati
+passerebbero dai server del servizio di notifica e quella frase non sarebbe
+più vera. L'avviso dice quindi **quante** persone e **su cosa**, mai
+**chi**: i nomi restano sul server, dietro la password, a un tocco di
+distanza.
+
+Se l'avviso non parte, **l'iscrizione resta registrata lo stesso**: il
+motivo si legge con `sudo docker logs --tail 50 iscrizioni-reale`.
+
+---
+
+## L'avviso per email a ogni iscrizione
 
 Nell'area riservata, dentro la manifestazione, c'è **«Avvisi per gli
 organizzatori»**: ci si scrivono uno o più indirizzi email, separati da

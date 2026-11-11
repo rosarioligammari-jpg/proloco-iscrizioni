@@ -1,0 +1,99 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}Avvisi sul telefono · Area riservata{% endblock %}
+{% block titolo_pagina %}Avvisi sul telefono{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <section class="scheda">
+    <h2>Come funziona</h2>
+    <p>Ogni volta che qualcuno si iscrive, il telefono squilla con un
+      avviso tipo:</p>
+
+    <div class="finto-avviso">
+      <p class="finto-titolo">Motor Village Fest · nuova iscrizione</p>
+      <p class="finto-corpo">4 persone · Pranzo sociale, Gimkana a tempo<br>
+        Siamo in 37, su 12 iscrizioni.</p>
+    </div>
+
+    <p><strong>Nell'avviso non c'è nessun nome</strong>, ed è voluto: chi si
+      iscrive firma un'informativa che dice che i suoi dati non vengono
+      comunicati a terzi. Toccando l'avviso si apre l'elenco completo qui
+      nell'area riservata, dove i nomi ci sono e sono protetti dalla
+      password.</p>
+  </section>
+
+  <section class="scheda">
+    <h2>Le tre cose da fare, una volta sola</h2>
+    <ol class="passi">
+      <li><strong>Installa l'app «ntfy»</strong> sul telefono. È gratuita:
+        si trova nell'App Store dell'iPhone e nel Play Store di Android,
+        cercando <strong>ntfy</strong>.</li>
+      <li><strong>Salva qui sotto il nome del canale</strong> (ce n'è già uno
+        pronto, difficile da indovinare).</li>
+      <li>Nell'app tocca <strong>«+»</strong> e scrivi <strong>lo stesso
+        nome del canale</strong>, identico. Poi torna qui e premi
+        <strong>«Manda un avviso di prova»</strong>.</li>
+    </ol>
+    <p class="aiuto">Il nome del canale è l'unica cosa che protegge gli
+      avvisi: chi lo conosce li riceve. Per questo non va scritto in
+      pubblico e non va scelto facile. Se temi che sia in giro, cambialo:
+      basta salvarne uno nuovo e rifare il passo 3.</p>
+  </section>
+
+  <form method="post">
+    <section class="scheda">
+      <h2>Il canale</h2>
+
+      <p class="campo">
+        <label for="canale">Nome del canale</label>
+        <input type="text" id="canale" name="canale"
+               value="{{ canale or proposta }}" autocomplete="off">
+        <span class="aiuto">Lettere, numeri, trattini. Da 6 a 64 caratteri.
+          Lascia vuoto per spegnere del tutto gli avvisi sul telefono.</span>
+      </p>
+
+      <p class="campo">
+        <label for="server">Servizio</label>
+        <input type="text" id="server" name="server"
+               value="{{ server or server_predefinito }}" autocomplete="off">
+        <span class="aiuto">Lascia <code>{{ server_predefinito }}</code>, che
+          è il servizio pubblico e gratuito. Si cambia solo se un giorno
+          metterete il vostro.</span>
+      </p>
+
+      <p class="azioni">
+        <button type="submit" class="pulsante">Salva</button>
+      </p>
+    </section>
+  </form>
+
+  {% if canale %}
+    <section class="scheda">
+      <h2>Prova</h2>
+      <p>Nell'app ntfy il canale da aggiungere si chiama:</p>
+      <p class="indirizzo"><code>{{ canale }}</code></p>
+      <p class="aiuto">Se l'app chiede anche il server, è
+        <code>{{ server }}</code>. L'indirizzo completo del canale è
+        <code>{{ indirizzo }}</code>.</p>
+      <form method="post">
+        <input type="hidden" name="azione" value="prova">
+        <p class="azioni-in-riga">
+          <button type="submit" class="pulsante piccolo">Manda un avviso di prova</button>
+        </p>
+      </form>
+      <p class="aiuto">Se non arriva niente: controlla che il nome nell'app
+        sia scritto <strong>identico</strong>, e che l'app abbia il permesso
+        di mandare notifiche (su iPhone: Impostazioni → Notifiche → ntfy).</p>
+    </section>
+  {% endif %}
+
+  <section class="scheda">
+    <h2>Se l'avviso non parte</h2>
+    <p>L'iscrizione <strong>viene registrata lo stesso</strong>. L'avviso è
+      un di più per voi, non una condizione per chi si iscrive: non deve mai
+      far fallire un'iscrizione. Il motivo di un mancato invio resta scritto
+      nei registri del programma.</p>
+  </section>
+
+{% endblock %}

@@ -9,6 +9,7 @@
   {% if mostra_barra | default(true) %}
     <nav class="barra">
       <a href="{{ url_for('riservato.elenco') }}">Tutte le manifestazioni</a>
+      <a href="{{ url_for('riservato.avvisi_telefono') }}">Avvisi sul telefono</a>
       <form method="post" action="{{ url_for('riservato.uscita') }}">
         <button type="submit" class="collegamento">Esci</button>
       </form>

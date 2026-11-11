@@ -545,3 +545,22 @@ main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
   border-radius: 8px;
   padding: .7rem .8rem;
 }
+
+/* ------------------------------------------- avvisi sul telefono (ntfy) */
+
+/* Un finto avviso, per far vedere com'e' fatto quello vero. */
+.finto-avviso {
+  border: 1px solid var(--bordo);
+  border-left: 4px solid var(--blu-ente);
+  border-radius: 10px;
+  background: #fff;
+  padding: .7rem .9rem;
+  margin: .75rem 0;
+  box-shadow: 0 1px 3px rgba(31, 38, 48, .08);
+}
+.finto-titolo { margin: 0; font-weight: 700; }
+.finto-corpo { margin: .2rem 0 0; color: var(--inchiostro-tenue); }
+
+.passi { margin: 0; padding-left: 1.3rem; }
+.passi li { margin-bottom: .6rem; }
+.passi li:last-child { margin-bottom: 0; }

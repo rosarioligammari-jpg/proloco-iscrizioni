@@ -12,7 +12,7 @@ from flask import (Blueprint, abort, g, redirect, render_template, request,
 
 from configurazione import (INVII_AL_MINUTO, LUNGHEZZA_CODICE_CONFERMA,
                             MASSIMO_PERSONE_PER_GRUPPO)
-from applicazione import archivio, posta
+from applicazione import archivio, avvisi, posta
 from applicazione.formato import (data_ora_italiana, euro_secco,
                                   oggi_iso, persone as dicitura_persone)
 
@@ -265,11 +265,12 @@ def invia(codice):
     # Anche preparare il messaggio e' protetto: nessun guaio qui dentro
     # deve mai arrivare in faccia a chi si e' appena iscritto.
     try:
+        _avvisa_sul_telefono(riga, numero_persone, scelte)
         _avvisa_organizzatori(riga, valori, numero_persone, scelte,
                               codice_conferma)
     except Exception:
         import traceback
-        print("  [posta] non sono riuscito a preparare l'avviso:")
+        print("  [avvisi] non sono riuscito a preparare l'avviso:")
         traceback.print_exc()
 
     return redirect(url_for("pubblico.iscritto", codice=codice,
@@ -289,6 +290,56 @@ def iscritto(codice, codice_conferma):
                  for r in righe if r["stato"] == "confermata")
     return render_template("inviata.html", m=riga, iscrizione=iscrizione,
                            righe=righe, totale_centesimi=totale)
+
+
+# -------------------------------------------- avviso sul telefono (ntfy)
+
+def _avvisa_sul_telefono(manifestazione, numero_persone, scelte):
+    """Fa squillare il telefono degli organizzatori.
+
+    NESSUN NOME esce da qui: si dice quante persone e su quali attività,
+    mai chi. Chi vuole sapere il nome tocca il collegamento e lo trova
+    nell'area riservata, dietro la password. Così l'informativa che
+    firmano gli iscritti — «i dati non vengono comunicati a terzi» —
+    resta vera.
+    """
+    canale = archivio.impostazione(g.con, avvisi.CHIAVE_CANALE, "")
+    if not canale:
+        return
+    server = archivio.impostazione(g.con, avvisi.CHIAVE_SERVER,
+                                   avvisi.SERVER_PREDEFINITO)
+
+    totali = archivio.totali_manifestazione(g.con, manifestazione["id"])
+    confermate = [a["nome"] for a, stato in scelte if stato == "confermata"]
+    in_attesa = [a["nome"] for a, stato in scelte if stato == "attesa"]
+
+    # Qualcosa si è appena riempito? È l'altra cosa che un organizzatore
+    # vuole sapere subito.
+    prospetto = {voce["id"]: voce for voce in
+                 archivio.prospetto_attivita_riservato(
+                     g.con, manifestazione["id"])}
+    piene = [a["nome"] for a, stato in scelte
+             if stato == "confermata"
+             and prospetto.get(a["id"], {}).get("al_completo")]
+
+    righe = []
+    if confermate:
+        righe.append("%s · %s" % (dicitura_persone(numero_persone),
+                                  ", ".join(confermate)))
+    if in_attesa:
+        righe.append("In lista d'attesa: %s" % ", ".join(in_attesa))
+    righe.append("Siamo in %d, su %d iscrizioni."
+                 % (totali["persone"], totali["iscrizioni"]))
+    if piene:
+        righe.append("Adesso è al completo: %s" % ", ".join(piene))
+
+    avvisi.manda_senza_far_danni(
+        server, canale,
+        "%s · nuova iscrizione" % manifestazione["nome"],
+        "\n".join(righe),
+        collegamento=url_for("riservato.manifestazione",
+                             numero=manifestazione["id"], _external=True),
+        etichette=["warning"] if piene else ["bell"])
 
 
 # ------------------------------------------------- avviso agli organizzatori
