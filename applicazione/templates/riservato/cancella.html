@@ -1,0 +1,78 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}Cancellare definitivamente · Area riservata{% endblock %}
+{% block titolo_pagina %}Cancellare definitivamente{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <div class="avviso rosso">
+    <p class="grande"><strong>Questa cosa non si può disfare.</strong></p>
+    <p>{% if quante == 1 %}L'iscrizione qui sotto verrà cancellata{% else %}Le
+      {{ quante }} iscrizioni qui sotto verranno cancellate{% endif %}
+      dall'archivio, insieme ai nomi, ai contatti e alle note.
+      <strong>Non si potrà più recuperare niente</strong>, e non comparirà
+      più nemmeno nell'elenco scaricato per Excel.</p>
+  </div>
+
+  <section class="scheda">
+    <h2>Che cosa sparisce</h2>
+    <p class="aiuto">Manifestazione: <strong>{{ m.nome }}</strong></p>
+
+    <ul class="elenco-iscritti">
+      {% for i in iscrizioni %}
+        <li class="iscritto annullato">
+          <p class="riga-nome">
+            <strong>{{ i.cognome }} {{ i.nome }}</strong>
+            {% if i.gruppo_nome %} — {{ i.gruppo_nome }}{% endif %}
+            {% if i.tipo == 'gruppo' %}, <strong>{{ i.numero_persone|persone }}</strong>{% endif %}
+          </p>
+          <p class="aiuto">codice {{ i.codice_conferma }}
+            · inviata il {{ i.creata_il|data_ora_italiana }}</p>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="scheda">
+    <h2>Prima di farlo</h2>
+    <p>Cancellare va bene in due casi:</p>
+    <ul class="elenco-semplice">
+      <li><strong>Qualcuno ha chiesto che i suoi dati siano cancellati.</strong>
+        È un suo diritto, scritto nell'informativa che ha firmato: in quel
+        caso cancellare è la cosa giusta da fare.</li>
+      <li><strong>La manifestazione è finita</strong> e si fa pulizia delle
+        iscrizioni annullate che non servono più.</li>
+    </ul>
+    <p class="aiuto">Se invece ti serve solo tenerla fuori dai conti, è
+      sufficiente lasciarla <strong>annullata</strong>: non conta nei totali,
+      non occupa posti, e si può rimettere fra le valide quando vuoi.</p>
+  </section>
+
+  <form method="post" action="{{ azione }}">
+    <p class="azioni">
+      <button type="submit" class="pulsante pericolo" id="pulsante-cancella">
+        {% if quante == 1 %}Sì, cancella definitivamente{% else %}Sì, cancella
+        definitivamente tutte e {{ quante }}{% endif %}</button>
+    </p>
+  </form>
+
+  <p class="azioni-in-riga">
+    <a class="pulsante piccolo secondario"
+       href="{{ url_for('riservato.manifestazione', numero=m.id) }}">No, torno indietro</a>
+  </p>
+
+{% endblock %}
+
+{% block fondo_pagina %}
+<script>
+  // Il doppio clic su un pulsante che cancella non deve mai partire due volte.
+  (function () {
+    var pulsante = document.getElementById('pulsante-cancella');
+    if (!pulsante) { return; }
+    pulsante.form.addEventListener('submit', function () {
+      pulsante.disabled = true;
+      pulsante.textContent = 'Sto cancellando...';
+    });
+  })();
+</script>
+{% endblock %}

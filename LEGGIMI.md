@@ -90,9 +90,10 @@ Da lì si fa tutto, senza toccare il codice:
 
 Due cose che il programma **non** fa, di proposito:
 
-- **non cancella niente.** Un'iscrizione sbagliata si annulla e resta negli
-  archivi; un'attività che non si fa più si sospende. Si può sempre tornare
-  indietro.
+- **non cancella niente per sbaglio.** Un'iscrizione sbagliata si *annulla*
+  e resta in archivio; un'attività che non si fa più si *sospende*. Da lì si
+  torna sempre indietro. Per far sparire davvero un'iscrizione ci vuole un
+  **secondo gesto**: vedi qui sotto.
 - **non incassa.** Le quote si pagano in loco: il programma dice solo quanto
   ci si aspetta di incassare.
 
@@ -101,6 +102,34 @@ Due cose che il programma **non** fa, di proposito:
 Copia nome, descrizione, informativa, attività, posti e quote. **Non** copia
 gli iscritti e **non** copia le date, e la copia nasce con le **iscrizioni
 chiuse**: così si correggono con calma nome e date prima di riaprire.
+
+---
+
+## Cancellare davvero un'iscrizione
+
+Si fa in **due tempi**, perché è l'unica cosa del programma che non si può
+disfare:
+
+1. l'iscrizione si **annulla** (resta in archivio, in grigio, non conta nei
+   totali e non occupa posti);
+2. sull'iscrizione annullata compare **«cancella definitivamente»**, che
+   porta a una pagina di conferma dove c'è scritto esattamente cosa
+   sparisce. Solo lì si cancella davvero.
+
+C'è anche il pulsante **«Cancella definitivamente le N annullate»**, per
+fare pulizia in blocco a manifestazione finita.
+
+Dopo la cancellazione il file dell'archivio viene **riscritto**: il testo
+cancellato non resta dentro il file. Chi chiede che i suoi dati spariscano
+ha diritto che spariscano davvero.
+
+**Quando è giusto cancellare**
+
+- **qualcuno chiede che i suoi dati siano cancellati**: è un suo diritto,
+  scritto nell'informativa che ha firmato;
+- **la manifestazione è finita** e si fa pulizia.
+
+Se invece serve solo tenerla fuori dai conti, basta lasciarla *annullata*.
 
 ---
 

@@ -199,12 +199,26 @@
                 <button type="submit" class="collegamento">
                   {{ 'rimetti fra le valide' if i.stato == 'annullata' else 'annulla' }}</button>
               </form>
+              {% if i.stato == 'annullata' %}
+                <a class="collegamento pericoloso"
+                   href="{{ url_for('riservato.cancella_iscrizione', numero=i.id) }}">cancella definitivamente</a>
+              {% endif %}
             </p>
           </li>
         {% endfor %}
       </ul>
-      <p class="aiuto">Un'iscrizione annullata non viene cancellata: resta in
-        archivio e si può rimettere fra le valide.</p>
+      <p class="aiuto">Un'iscrizione annullata non conta nei totali e non
+        occupa posti, ma resta in archivio e si può rimettere fra le valide.
+        Per farla sparire davvero c'è «cancella definitivamente», che non si
+        può disfare.</p>
+
+      {% if totali.annullate %}
+        <p class="azioni-in-riga">
+          <a class="pulsante piccolo secondario pericoloso"
+             href="{{ url_for('riservato.cancella_annullate', numero=m.id) }}">
+            Cancella definitivamente le {{ totali.annullate }} annullate</a>
+        </p>
+      {% endif %}
 
     {% else %}
       <p>Ancora nessun iscritto.</p>

@@ -564,3 +564,21 @@ main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
 .passi { margin: 0; padding-left: 1.3rem; }
 .passi li { margin-bottom: .6rem; }
 .passi li:last-child { margin-bottom: 0; }
+
+/* ------------------------------------------- cancellazione definitiva */
+
+/* Rosso pieno: e' l'unico gesto del programma che non si puo' disfare,
+   e deve sembrare diverso da tutti gli altri. */
+.pulsante.pericolo {
+  background: var(--rosso);
+}
+.pulsante.pericolo:hover { background: #7a1414; }
+
+.collegamento.pericoloso,
+a.collegamento.pericoloso { color: var(--rosso); }
+
+.pulsante.secondario.pericoloso {
+  color: var(--rosso);
+  border-color: var(--rosso);
+}
+.pulsante.secondario.pericoloso:hover { background: var(--rosso-sfondo); }

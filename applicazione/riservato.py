@@ -189,7 +189,11 @@ def manifestazione(numero):
         "riservato/manifestazione.html",
         m=m,
         attivita=archivio.prospetto_attivita_riservato(g.con, numero),
-        iscrizioni=archivio.prospetto_iscrizioni(g.con, numero),
+        # Anche le annullate: sono segnate in grigio con l'etichetta, e
+        # senza mostrarle non si potrebbe ne' rimetterle fra le valide ne'
+        # cancellarle.
+        iscrizioni=archivio.prospetto_iscrizioni(g.con, numero,
+                                                 includi_annullate=True),
         totali=archivio.totali_manifestazione(g.con, numero),
         indirizzo_pubblico=url_for("pubblico.manifestazione",
                                    codice=m["codice"], _external=True))
@@ -599,6 +603,73 @@ def annulla_iscrizione(numero):
              else "annullata"), "fatto")
     return redirect(url_for("riservato.manifestazione",
                             numero=iscrizione["manifestazione_id"]))
+
+
+@riservato.route("/iscrizione/<int:numero>/cancella", methods=["GET", "POST"])
+@serve_entrata
+def cancella_iscrizione(numero):
+    """Cancella per sempre una singola iscrizione gia' annullata."""
+    iscrizione = g.con.execute("SELECT * FROM iscrizione WHERE id = ?",
+                               (numero,)).fetchone()
+    if iscrizione is None:
+        abort(404)
+    m = archivio.manifestazione_per_id(g.con,
+                                       iscrizione["manifestazione_id"])
+
+    if iscrizione["stato"] != "annullata":
+        flash("Si cancellano solo le iscrizioni annullate. Prima annullala, "
+              "poi potrai cancellarla.", "errore")
+        return redirect(url_for("riservato.manifestazione", numero=m["id"]))
+
+    if request.method == "POST":
+        riepilogo = archivio.cancella_iscrizione_definitivamente(g.con, numero)
+        archivio.ricompatta(g.con)
+        print("  cancellata definitivamente l'iscrizione %s (%d persone)"
+              % (riepilogo["codice"], riepilogo["persone"]))
+        flash("Cancellata definitivamente l'iscrizione %s. Non è più "
+              "recuperabile." % riepilogo["codice"], "fatto")
+        return redirect(url_for("riservato.manifestazione", numero=m["id"]))
+
+    return render_template(
+        "riservato/cancella.html", m=m, quante=1,
+        iscrizioni=[iscrizione],
+        azione=url_for("riservato.cancella_iscrizione", numero=numero))
+
+
+@riservato.route("/manifestazione/<int:numero>/cancella-annullate",
+                 methods=["GET", "POST"])
+@serve_entrata
+def cancella_annullate(numero):
+    """Cancella per sempre tutte le iscrizioni annullate di una
+    manifestazione: serve per fare pulizia dopo la manifestazione."""
+    m = archivio.manifestazione_per_id(g.con, numero)
+    if m is None:
+        abort(404)
+    annullate = archivio.iscrizioni_annullate(g.con, numero)
+
+    if not annullate:
+        flash("Non c'è nessuna iscrizione annullata da cancellare.", "errore")
+        return redirect(url_for("riservato.manifestazione", numero=numero))
+
+    if request.method == "POST":
+        quante, persone = 0, 0
+        for iscrizione in annullate:
+            riepilogo = archivio.cancella_iscrizione_definitivamente(
+                g.con, iscrizione["id"])
+            if riepilogo:
+                quante += 1
+                persone += riepilogo["persone"]
+        archivio.ricompatta(g.con)
+        print("  cancellate definitivamente %d iscrizioni annullate "
+              "(%d persone) di «%s»" % (quante, persone, m["nome"]))
+        flash("Cancellate definitivamente %d iscrizioni annullate. Non sono "
+              "più recuperabili." % quante, "fatto")
+        return redirect(url_for("riservato.manifestazione", numero=numero))
+
+    return render_template(
+        "riservato/cancella.html", m=m, quante=len(annullate),
+        iscrizioni=annullate,
+        azione=url_for("riservato.cancella_annullate", numero=numero))
 
 
 @riservato.route("/riga/<int:numero>/conferma", methods=["POST"])

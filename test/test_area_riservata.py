@@ -307,5 +307,144 @@ class ProvaAreaRiservata(ProvaBase):
         self.assertIn("Pro Loco Villafrati APS", nuova["informativa_privacy"])
 
 
+class ProvaCancellazioneDefinitiva(ProvaBase):
+    """Cancellare e' l'unica cosa che non si puo' disfare: si fa in due
+    tempi, e solo su iscrizioni gia' annullate."""
+
+    PASSWORD = "proloco2026"
+
+    def entra(self):
+        self.cliente.post("/riservato/entrata",
+                          data={"password": self.PASSWORD,
+                                "ripetuta": self.PASSWORD})
+
+    def numero_iscrizione(self):
+        con = archivio.connessione()
+        try:
+            return con.execute("SELECT id FROM iscrizione").fetchone()["id"]
+        finally:
+            con.close()
+
+    def righe_collegate(self, iscrizione_id):
+        con = archivio.connessione()
+        try:
+            return con.execute(
+                "SELECT COUNT(*) AS q FROM iscrizione_attivita "
+                "WHERE iscrizione_id = ?", (iscrizione_id,)).fetchone()["q"]
+        finally:
+            con.close()
+
+    # ------------------------------------------------------- la sicurezza
+
+    def test_una_iscrizione_valida_non_si_cancella(self):
+        self.iscrivi()
+        self.entra()
+        numero = self.numero_iscrizione()
+        risposta = self.cliente.post("/riservato/iscrizione/%d/cancella"
+                                     % numero)
+        self.assertEqual(risposta.status_code, 302)
+        self.assertEqual(self.quante_iscrizioni(), 1)
+
+    def test_guardare_la_pagina_non_cancella_niente(self):
+        self.iscrivi()
+        self.entra()
+        numero = self.numero_iscrizione()
+        self.cliente.post("/riservato/iscrizione/%d/annulla" % numero)
+        pagina = self.cliente.get("/riservato/iscrizione/%d/cancella"
+                                  % numero).get_data(as_text=True)
+        self.assertIn("non si pu", pagina)        # «non si può disfare»
+        self.assertIn("Rossi", pagina)
+        self.assertEqual(self.quante_iscrizioni(), 1)
+
+    # --------------------------------------------------- la cancellazione
+
+    def test_annullata_e_poi_cancellata_sparisce_davvero(self):
+        self.iscrivi()
+        self.entra()
+        numero = self.numero_iscrizione()
+        self.assertEqual(self.righe_collegate(numero), 1)
+
+        self.cliente.post("/riservato/iscrizione/%d/annulla" % numero)
+        risposta = self.cliente.post("/riservato/iscrizione/%d/cancella"
+                                     % numero)
+        self.assertEqual(risposta.status_code, 302)
+        self.assertEqual(self.quante_iscrizioni(), 0)
+        self.assertEqual(self.righe_collegate(numero), 0)
+
+    def test_il_codice_di_conferma_non_apre_piu_niente(self):
+        risposta = self.iscrivi()
+        indirizzo = risposta.headers["Location"]
+        self.entra()
+        numero = self.numero_iscrizione()
+        self.cliente.post("/riservato/iscrizione/%d/annulla" % numero)
+        self.cliente.post("/riservato/iscrizione/%d/cancella" % numero)
+        self.assertEqual(self.cliente.get(indirizzo).status_code, 404)
+
+    def test_in_blocco_si_cancellano_solo_le_annullate(self):
+        self.iscrivi(gettone="prima")
+        self.iscrivi(gettone="seconda", nome="Anna")
+        self.entra()
+        con = archivio.connessione()
+        prima = con.execute("SELECT id FROM iscrizione ORDER BY id").fetchall()
+        con.close()
+        self.cliente.post("/riservato/iscrizione/%d/annulla" % prima[0]["id"])
+
+        risposta = self.cliente.post(
+            "/riservato/manifestazione/%d/cancella-annullate"
+            % self.manifestazione_id)
+        self.assertEqual(risposta.status_code, 302)
+        self.assertEqual(self.quante_iscrizioni(), 1)
+        con = archivio.connessione()
+        try:
+            rimasta = con.execute("SELECT nome FROM iscrizione").fetchone()
+        finally:
+            con.close()
+        self.assertEqual(rimasta["nome"], "Anna")
+
+    def test_senza_annullate_non_propone_la_cancellazione_in_blocco(self):
+        self.iscrivi()
+        self.entra()
+        pagina = self.cliente.get("/riservato/manifestazione/%d"
+                                  % self.manifestazione_id).get_data(
+                                      as_text=True)
+        self.assertNotIn("cancella-annullate", pagina)
+
+    def test_con_una_annullata_propone_la_cancellazione_in_blocco(self):
+        self.iscrivi()
+        self.entra()
+        self.cliente.post("/riservato/iscrizione/%d/annulla"
+                          % self.numero_iscrizione())
+        pagina = self.cliente.get("/riservato/manifestazione/%d"
+                                  % self.manifestazione_id).get_data(
+                                      as_text=True)
+        self.assertIn("cancella-annullate", pagina)
+        self.assertIn("cancella definitivamente", pagina.lower())
+
+    def test_i_posti_tornano_giusti_dopo_la_cancellazione(self):
+        self.iscrivi(tipo="gruppo", gruppo_nome="Amici", numero_persone="4")
+        self.entra()
+        numero = self.numero_iscrizione()
+        self.cliente.post("/riservato/iscrizione/%d/annulla" % numero)
+        self.cliente.post("/riservato/iscrizione/%d/cancella" % numero)
+        self.assertEqual(self.persone_su(self.pranzo), 0)
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        self.assertIn("posti rimasti: 10 su 10", pagina)
+
+
+    def test_le_annullate_si_vedono_nell_elenco(self):
+        """Senza vederle non si potrebbero ne' rimettere fra le valide ne'
+        cancellare: restavano invisibili e irraggiungibili."""
+        self.iscrivi()
+        self.entra()
+        self.cliente.post("/riservato/iscrizione/%d/annulla"
+                          % self.numero_iscrizione())
+        pagina = self.cliente.get("/riservato/manifestazione/%d"
+                                  % self.manifestazione_id).get_data(
+                                      as_text=True)
+        self.assertIn("Rossi", pagina)
+        self.assertIn("annullata", pagina)
+        self.assertIn("rimetti fra le valide", pagina)
+
+
 if __name__ == "__main__":
     unittest.main()

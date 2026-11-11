@@ -365,6 +365,63 @@ def totali_manifestazione(con, manifestazione_id):
     }
 
 
+# --------------------------------------------- cancellazione definitiva
+
+def cancella_iscrizione_definitivamente(con, iscrizione_id):
+    """Cancella davvero un'iscrizione, e non si torna indietro.
+
+    Si cancella SOLO quello che appartiene a quell'iscrizione: la riga e
+    i suoi collegamenti alle attivita'. Niente altro viene toccato.
+
+    Si accetta solo su iscrizioni gia' ANNULLATE: cancellare e' l'unica
+    cosa che non si puo' disfare, percio' deve essere un secondo gesto,
+    non una svista. Restituisce un piccolo riepilogo SENZA nomi, buono
+    per i registri del programma.
+    """
+    riga = con.execute("SELECT * FROM iscrizione WHERE id = ?",
+                       (iscrizione_id,)).fetchone()
+    if riga is None:
+        return None
+    if riga["stato"] != "annullata":
+        raise ValueError(
+            "Si cancellano solo le iscrizioni annullate: prima si annulla.")
+
+    con.execute("BEGIN IMMEDIATE")
+    try:
+        quante_righe = con.execute(
+            "SELECT COUNT(*) AS q FROM iscrizione_attivita "
+            "WHERE iscrizione_id = ?", (iscrizione_id,)).fetchone()["q"]
+        con.execute("DELETE FROM iscrizione_attivita WHERE iscrizione_id = ?",
+                    (iscrizione_id,))
+        con.execute("DELETE FROM iscrizione WHERE id = ?", (iscrizione_id,))
+        con.execute("COMMIT")
+    except Exception:
+        con.execute("ROLLBACK")
+        raise
+
+    return {"codice": riga["codice_conferma"],
+            "persone": riga["numero_persone"],
+            "righe_attivita": quante_righe}
+
+
+def iscrizioni_annullate(con, manifestazione_id):
+    return con.execute(
+        "SELECT * FROM iscrizione WHERE manifestazione_id = ? "
+        "  AND stato = 'annullata' ORDER BY id",
+        (manifestazione_id,)).fetchall()
+
+
+def ricompatta(con):
+    """Riscrive il file dell'archivio.
+
+    Serve dopo una cancellazione: senza questo, il testo cancellato
+    resterebbe dentro il file anche se il programma non lo mostra piu'.
+    Chi chiede la cancellazione dei propri dati ha diritto che spariscano
+    davvero.
+    """
+    con.execute("VACUUM")
+
+
 def nuovo_codice_conferma(con, lunghezza):
     """Codice breve, leggibile al telefono: niente O/0 ne' I/1."""
     alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
