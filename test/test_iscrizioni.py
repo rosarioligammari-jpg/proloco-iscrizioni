@@ -381,6 +381,17 @@ class ProvaImpostazioniDiPubblicazione(ProvaBase):
         self.assertEqual(
             self.cliente.get("/salute").get_json()["collegamento"], "http")
 
+    def test_il_foglio_di_stile_porta_la_sua_versione(self):
+        """Senza un numero che cambia, il telefono e il servizio davanti
+        al programma continuano a usare il foglio di stile vecchio che
+        hanno in memoria: le regole nuove non arrivano, e pezzi di pagina
+        che dovrebbero sparire restano visibili. E' successo davvero."""
+        import re
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        trovato = re.search(r'stile\.css\?v=(\d+)', pagina)
+        self.assertIsNotNone(trovato, "manca la versione nel foglio di stile")
+        self.assertGreater(int(trovato.group(1)), 0)
+
     def test_un_invio_enorme_viene_rifiutato(self):
         from configurazione import DIMENSIONE_MASSIMA_INVIO
         risposta = self.iscrivi(note="x" * (DIMENSIONE_MASSIMA_INVIO + 10))

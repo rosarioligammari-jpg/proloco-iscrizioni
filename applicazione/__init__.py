@@ -36,6 +36,22 @@ def chiave_segreta():
     return percorso.read_text(encoding="utf-8").strip()
 
 
+def versione_del_foglio_di_stile():
+    """Un numero che cambia quando cambia il foglio di stile.
+
+    Serve ad accodarlo all'indirizzo (stile.css?v=...). Senza, il file
+    ha sempre lo stesso nome e il telefono — o il servizio che sta
+    davanti al programma — continua a usare quello vecchio che ha in
+    memoria. Succede davvero: una regola nuova non arriva, e pezzi di
+    pagina che dovrebbero sparire restano visibili.
+    """
+    foglio = Path(__file__).resolve().parent / "static" / "stile.css"
+    try:
+        return str(int(foglio.stat().st_mtime))
+    except OSError:
+        return "0"
+
+
 def _sempre_sicuro(applicazione_sotto):
     """Dice al programma che fuori si viaggia su https."""
     def involucro(ambiente, inizia_risposta):
@@ -84,6 +100,7 @@ def crea_applicazione():
 
     archivio.prepara()
     formato.registra_filtri(app)
+    versione_stile = versione_del_foglio_di_stile()
 
     @app.before_request
     def apri_archivio():
@@ -100,7 +117,8 @@ def crea_applicazione():
         return {"titolo_scheda": TITOLO_SCHEDA,
                 "nome_programma": NOME_PROGRAMMA,
                 "ente": ENTE,
-                "file_logo": file_logo()}
+                "file_logo": file_logo(),
+                "versione_stile": versione_stile}
 
     from applicazione.pubblico import pubblico
     from applicazione.riservato import riservato

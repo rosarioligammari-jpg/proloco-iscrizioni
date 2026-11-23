@@ -4,7 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titolo %}{{ titolo_scheda }}{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='stile.css') }}">
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='stile.css') }}?v={{ versione_stile }}">
 </head>
 <body>
 
