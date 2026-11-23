@@ -113,7 +113,7 @@
           </p>
         </div>
 
-        <div class="campi solo-gruppo" id="campi-gruppo">
+        <div class="campi solo-gruppo{{ ' visibile' if valori.tipo == 'gruppo' }}" id="campi-gruppo">
           <p class="campo">
             <label for="numero_persone">Quante persone in tutto <span class="obbligatorio">*</span></label>
             <input type="number" id="numero_persone" name="numero_persone" min="2"
@@ -153,7 +153,7 @@
           </div>
         </div>
 
-        <div class="campi solo-singolo visibile" id="campi-singolo">
+        <div class="campi solo-singolo{{ ' visibile' if valori.tipo != 'gruppo' }}" id="campi-singolo">
           <p class="campo spunta">
             <label>
               <input type="checkbox" name="aggiungi_passeggero" value="1"
@@ -167,7 +167,7 @@
             </label>
           </p>
 
-          <p class="campo solo-con-passeggero" id="campo-nome-passeggero">
+          <p class="campo solo-con-passeggero{{ ' visibile' if valori.tipo != 'gruppo' and valori.aggiungi_passeggero }}" id="campo-nome-passeggero">
             <label for="nome_passeggero">Nome del passeggero
               <span class="facoltativo">(facoltativo)</span></label>
             <input type="text" id="nome_passeggero" name="nome_passeggero"

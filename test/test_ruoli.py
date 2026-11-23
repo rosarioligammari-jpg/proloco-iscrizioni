@@ -30,6 +30,28 @@ class ProvaDomandaNelModulo(ProvaBase):
         self.assertIn('name="aggiungi_passeggero"', pagina)
         self.assertIn("Porto un passeggero", pagina)
 
+    def test_la_spunta_non_si_vede_se_si_iscrive_un_gruppo(self):
+        """Il nascondere non deve dipendere dal codice del browser: la
+        pagina deve arrivare gia' giusta. Altrimenti, finche' quel codice
+        non parte — o se si inceppa — la spunta resta li' a confondere."""
+        # Si rimanda il modulo come gruppo, sbagliando qualcosa: cosi' la
+        # pagina torna indietro con «gruppo» gia' scelto.
+        risposta = self.iscrivi(tipo="gruppo", gruppo_nome="", 
+                                numero_persone="4", conducenti="2",
+                                passeggeri="2")
+        pagina = risposta.get_data(as_text=True)
+        pezzo_singolo = pagina.split('id="campi-singolo"')[0][-120:]
+        pezzo_gruppo = pagina.split('id="campi-gruppo"')[0][-120:]
+        self.assertNotIn("visibile", pezzo_singolo)
+        self.assertIn("visibile", pezzo_gruppo)
+
+    def test_per_chi_si_iscrive_da_solo_il_blocco_si_vede_subito(self):
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        pezzo_singolo = pagina.split('id="campi-singolo"')[0][-120:]
+        pezzo_gruppo = pagina.split('id="campi-gruppo"')[0][-120:]
+        self.assertIn("visibile", pezzo_singolo)
+        self.assertNotIn("visibile", pezzo_gruppo)
+
     def test_senza_spunta_e_una_persona_sola_alla_guida(self):
         self.iscrivi()
         riga = self.riga_iscrizione()
