@@ -137,11 +137,20 @@
           </div>
           <p class="aiuto" id="somma-ruoli"></p>
 
-          <p class="campo">
-            <label for="nomi_partecipanti">Nomi dei partecipanti <span class="facoltativo">(facoltativo)</span></label>
-            <textarea id="nomi_partecipanti" name="nomi_partecipanti" rows="4"
-                      placeholder="Un nome per riga">{{ valori.nomi_partecipanti|default('') }}</textarea>
-          </p>
+          <div id="nomi-del-gruppo">
+            <p class="campo">
+              <label>Chi è alla guida <span class="facoltativo">(nomi facoltativi)</span></label>
+              <span class="elenco-nomi" id="nomi-guida"></span>
+            </p>
+            <p class="campo">
+              <label>I passeggeri <span class="facoltativo">(nomi facoltativi)</span></label>
+              <span class="elenco-nomi" id="nomi-trasportati"></span>
+            </p>
+            <span class="aiuto">Le caselle compaiono in base ai due numeri
+              qui sopra. I nomi non sono obbligatori: quelli che scrivi
+              finiscono già stampati sul biglietto di quella persona, gli
+              altri si scrivono a penna al banco.</span>
+          </div>
         </div>
 
         <div class="campi solo-singolo visibile" id="campi-singolo">
@@ -327,10 +336,47 @@
         avviso.className = 'aiuto somma-sbagliata';
       }
     }
+    // Una casella per ogni persona, divise fra chi guida e chi e'
+    // trasportato. Si rifanno quando cambiano i numeri, tenendo quello
+    // che era gia' stato scritto: chi corregge un numero non deve
+    // riscrivere i nomi di prima.
+    function caselleNomi(contenitore, nomeCampo, quante) {
+      if (!contenitore) { return; }
+      var scritti = [];
+      contenitore.querySelectorAll('input').forEach(function (campo) {
+        scritti.push(campo.value);
+      });
+      contenitore.innerHTML = '';
+      for (var i = 0; i < quante; i++) {
+        var campo = document.createElement('input');
+        campo.type = 'text';
+        campo.name = nomeCampo;
+        campo.className = 'casella-nome';
+        campo.placeholder = (i + 1) + '°';
+        campo.value = scritti[i] || '';
+        contenitore.appendChild(campo);
+      }
+    }
+
+    function rifaiLeCaselle() {
+      var guida = document.getElementById('conducenti');
+      var trasportati = document.getElementById('passeggeri');
+      if (!guida || !trasportati) { return; }
+      var quantiGuida = Math.max(0, Math.min(99, parseInt(guida.value, 10) || 0));
+      var quantiTrasportati = Math.max(0, Math.min(99, parseInt(trasportati.value, 10) || 0));
+      caselleNomi(document.getElementById('nomi-guida'), 'nome_guida', quantiGuida);
+      caselleNomi(document.getElementById('nomi-trasportati'),
+                  'nome_trasportato', quantiTrasportati);
+    }
+
     ['conducenti', 'passeggeri'].forEach(function (quale) {
       var campo = document.getElementById(quale);
-      if (campo) { campo.addEventListener('input', controllaSomma); }
+      if (campo) {
+        campo.addEventListener('input', controllaSomma);
+        campo.addEventListener('input', rifaiLeCaselle);
+      }
     });
+    rifaiLeCaselle();
 
     // Quota attesa: solo un'informazione, il conto vero lo rifa' il programma.
     function calcolaTotale() {

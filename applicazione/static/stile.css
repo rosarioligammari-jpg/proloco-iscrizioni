@@ -179,6 +179,34 @@ main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
 .campo.solo-con-passeggero { display: none; }
 .campo.solo-con-passeggero.visibile { display: block; }
 
+/* Una casella per ogni persona: su un telefono stanno in colonna, su
+   uno schermo largo si affiancano. */
+.elenco-nomi {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .4rem;
+}
+.elenco-nomi:empty { display: none; }
+
+.casella-nome {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: .6rem .7rem;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #c3c8d0;
+  border-radius: 8px;
+}
+.casella-nome:focus {
+  outline: 3px solid #e9bdb2;
+  border-color: var(--accento);
+}
+
+@media (min-width: 30rem) {
+  .elenco-nomi { grid-template-columns: 1fr 1fr; }
+}
+
 .aiuto.somma-giusta { color: var(--verde); font-weight: 600; }
 .aiuto.somma-sbagliata { color: var(--rosso); font-weight: 600; }
 

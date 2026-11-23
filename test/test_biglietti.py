@@ -61,6 +61,32 @@ class ProvaBiglietti(ProvaBase):
         self.assertNotIn("—</div>", pagina)
         self.assertEqual(pagina.count("riga-da-scrivere"), 2)
 
+    def test_le_caselle_vuote_non_fanno_slittare_i_nomi(self):
+        """Il modulo manda una casella per ogni persona, anche vuota. Se
+        si saltassero le vuote, il nome del secondo autista finirebbe sul
+        biglietto del primo."""
+        self.iscrivi(tipo="gruppo", gruppo_nome="Moto Club",
+                     numero_persone="3", conducenti="2", passeggeri="1",
+                     nome_guida=["", "Anna Russo"],
+                     nome_trasportato=["Carlo Neri"])
+        self.entra()
+        pagina = self.stampa()
+        # Il primo resta senza nome scritto (c'e' il referente), il
+        # secondo e' Anna, il terzo Carlo: nessuno slittamento.
+        posizione_anna = pagina.find("Anna Russo")
+        posizione_carlo = pagina.find("Carlo Neri")
+        self.assertGreater(posizione_anna, 0)
+        self.assertGreater(posizione_carlo, posizione_anna)
+        self.assertIn("Mario Rossi", pagina)
+
+    def test_nel_gruppo_con_le_caselle_il_ruolo_si_stampa(self):
+        self.iscrivi(tipo="gruppo", gruppo_nome="Moto Club",
+                     numero_persone="3", conducenti="2", passeggeri="1",
+                     nome_guida=["Giuseppe", "Anna"],
+                     nome_trasportato=["Carlo"])
+        self.entra()
+        self.assertEqual(self.stampa().count("casella segnata"), 3)
+
     def test_senza_i_nomi_il_primo_biglietto_porta_il_referente(self):
         self.iscrivi(tipo="gruppo", gruppo_nome="Amici", numero_persone="3")
         self.entra()

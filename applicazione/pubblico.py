@@ -106,6 +106,11 @@ def _valori_inviati():
         "gruppo_nome": moduli.get("gruppo_nome", "").strip(),
         "numero_persone": moduli.get("numero_persone", "").strip(),
         "nomi_partecipanti": moduli.get("nomi_partecipanti", "").strip(),
+        # Per i gruppi i nomi arrivano in caselle separate, prima
+        # quelli di chi guida e poi quelli dei trasportati.
+        "nomi_guida": [n.strip() for n in moduli.getlist("nome_guida")],
+        "nomi_trasportati": [n.strip() for n
+                             in moduli.getlist("nome_trasportato")],
         "note": moduli.get("note", "").strip(),
         "consenso": bool(moduli.get("consenso")),
         "accetta_attesa": bool(moduli.get("accetta_attesa")),
@@ -251,8 +256,13 @@ def invia(codice):
             con.execute("ROLLBACK")
             return _rimostra(riga, valori, ["Scegli almeno un'attività."])
 
-        # Con il passeggero i nomi diventano due, nell'ordine in cui
-        # escono i biglietti: prima chi guida, poi chi e' trasportato.
+        # I nomi si conservano NELL'ORDINE in cui escono i biglietti:
+        # prima chi guida, poi chi e' trasportato. E' quest'ordine che
+        # permette poi di stampare il ruolo giusto su ogni biglietto.
+        if valori["tipo"] == "gruppo":
+            in_ordine = (valori["nomi_guida"] + valori["nomi_trasportati"])
+            if in_ordine:
+                valori["nomi_partecipanti"] = "\n".join(in_ordine)
         if valori["tipo"] != "gruppo" and valori["aggiungi_passeggero"]:
             valori["nomi_partecipanti"] = "%s %s\n%s" % (
                 valori["nome"], valori["cognome"],

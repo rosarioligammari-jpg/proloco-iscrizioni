@@ -243,9 +243,21 @@ def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
                                      for r in confermate):
             continue
 
-        nomi = [riga.strip() for riga
-                in iscrizione["nomi_partecipanti"].splitlines() if riga.strip()]
         quante = iscrizione["numero_persone"]
+
+        # I nomi contano per POSIZIONE, e la posizione dice anche chi
+        # guida e chi e' trasportato. Vale pero' solo se le righe sono
+        # tante quante le persone, cioe' se arrivano dal modulo a
+        # caselle: li' ogni persona ha la sua riga, anche vuota.
+        # Le iscrizioni vecchie hanno un testo libero, dove una riga
+        # vuota non vuol dire niente: li' i nomi si usano in fila e il
+        # ruolo non si stampa.
+        righe_nomi = iscrizione["nomi_partecipanti"].splitlines()
+        in_posizione = len(righe_nomi) == quante
+        if in_posizione:
+            nomi = [riga.strip() for riga in righe_nomi]
+        else:
+            nomi = [riga.strip() for riga in righe_nomi if riga.strip()]
 
         # Il ruolo si stampa solo quando si sa di CHI e': di un gruppo
         # misto sappiamo quanti guidano, non quale biglietto sia di chi.
@@ -264,17 +276,23 @@ def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
                 # Chi si iscrive da solo con un passeggero: il primo
                 # biglietto e' suo, il secondo del passeggero. Qui si sa.
                 return "conducente" if posizione == 0 else "passeggero"
-            # Gruppo misto: si sa QUANTI guidano, non quale biglietto
-            # sia di chi. Meglio due caselline vuote che un'ipotesi.
+            if in_posizione:
+                # Gruppo iscritto con le caselle: prima chi guida, poi i
+                # trasportati. L'ordine e' quello in cui sono stati
+                # scritti, quindi il ruolo si sa.
+                return "conducente" if posizione < conducenti else "passeggero"
+            # Gruppo vecchio, con i nomi scritti alla rinfusa: si sa
+            # QUANTI guidano, non quale biglietto sia di chi. Meglio due
+            # caselline vuote che un'ipotesi.
             return None
         for posizione in range(max(1, quante)):
             numero += 1
-            if posizione < len(nomi):
-                nome = nomi[posizione]
-            elif posizione == 0:
+            nome = nomi[posizione] if posizione < len(nomi) else ""
+            if not nome and posizione == 0:
+                # Se il primo nome manca, il primo biglietto porta almeno
+                # il referente: e' la persona che si e' iscritta, e al
+                # banco e' quella che si va a cercare.
                 nome = "%s %s" % (iscrizione["nome"], iscrizione["cognome"])
-            else:
-                nome = ""
             voci.append({
                 "numero": numero,
                 "nome": nome,
