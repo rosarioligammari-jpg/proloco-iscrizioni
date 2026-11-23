@@ -121,10 +121,46 @@
                    value="{{ valori.numero_persone|default('2') }}">
             <span class="aiuto">Conta anche te stesso. Fino a {{ massimo_gruppo }} persone per iscrizione.</span>
           </p>
+          <div class="campi affiancati">
+            <p class="campo">
+              <label for="conducenti">Quanti alla guida <span class="obbligatorio">*</span></label>
+              <input type="number" id="conducenti" name="conducenti" min="0"
+                     max="{{ massimo_gruppo }}" inputmode="numeric"
+                     value="{{ valori.conducenti|default('') }}">
+            </p>
+            <p class="campo">
+              <label for="passeggeri">Quanti passeggeri <span class="obbligatorio">*</span></label>
+              <input type="number" id="passeggeri" name="passeggeri" min="0"
+                     max="{{ massimo_gruppo }}" inputmode="numeric"
+                     value="{{ valori.passeggeri|default('') }}">
+            </p>
+          </div>
+          <p class="aiuto" id="somma-ruoli"></p>
+
           <p class="campo">
             <label for="nomi_partecipanti">Nomi dei partecipanti <span class="facoltativo">(facoltativo)</span></label>
             <textarea id="nomi_partecipanti" name="nomi_partecipanti" rows="4"
                       placeholder="Un nome per riga">{{ valori.nomi_partecipanti|default('') }}</textarea>
+          </p>
+        </div>
+
+        <div class="campi solo-singolo visibile" id="campi-singolo">
+          <p class="campo">
+            <label>Sei alla guida o passeggero? <span class="obbligatorio">*</span></label>
+            <span class="scelta-tipo">
+              <label class="pastiglia">
+                <input type="radio" name="ruolo" value="conducente"
+                       {% if valori.ruolo == 'conducente' %}checked{% endif %}>
+                <span>Sono alla guida</span>
+              </label>
+              <label class="pastiglia">
+                <input type="radio" name="ruolo" value="passeggero"
+                       {% if valori.ruolo == 'passeggero' %}checked{% endif %}>
+                <span>Sono passeggero</span>
+              </label>
+            </span>
+            <span class="aiuto">Serve agli organizzatori per sapere quanti
+              mezzi arrivano, per il parcheggio e per il giro.</span>
           </p>
         </div>
       </section>
@@ -244,6 +280,9 @@
     function aggiorna() {
       var gruppo = document.querySelector('input[name="tipo"]:checked').value === 'gruppo';
       if (campiGruppo) { campiGruppo.classList.toggle('visibile', gruppo); }
+      var campiSingolo = document.getElementById('campi-singolo');
+      if (campiSingolo) { campiSingolo.classList.toggle('visibile', !gruppo); }
+      controllaSomma();
       // Il gruppo si puo' indicare sempre, ma per un capogruppo e' dovuto.
       var perGruppo = document.querySelectorAll('.solo-per-gruppo');
       var perSingolo = document.querySelectorAll('.solo-per-singolo');
@@ -254,6 +293,34 @@
     for (var i = 0; i < tipi.length; i++) {
       tipi[i].addEventListener('change', aggiorna);
     }
+
+    // La somma dei ruoli deve fare il numero delle persone: lo si dice
+    // mentre si scrive, non dopo aver premuto il pulsante.
+    function controllaSomma() {
+      var avviso = document.getElementById('somma-ruoli');
+      var guida = document.getElementById('conducenti');
+      var passeggeri = document.getElementById('passeggeri');
+      if (!avviso || !guida || !passeggeri || !numero) { return; }
+      var totale = parseInt(numero.value, 10) || 0;
+      if (guida.value === '' && passeggeri.value === '') {
+        avviso.textContent = 'I due numeri insieme devono fare ' + totale + '.';
+        avviso.className = 'aiuto';
+        return;
+      }
+      var somma = (parseInt(guida.value, 10) || 0) + (parseInt(passeggeri.value, 10) || 0);
+      if (somma === totale) {
+        avviso.textContent = 'Tornano: ' + somma + ' persone.';
+        avviso.className = 'aiuto somma-giusta';
+      } else {
+        avviso.textContent = 'Adesso fanno ' + somma + ', ma il gruppo è di '
+          + totale + ' persone.';
+        avviso.className = 'aiuto somma-sbagliata';
+      }
+    }
+    ['conducenti', 'passeggeri'].forEach(function (quale) {
+      var campo = document.getElementById(quale);
+      if (campo) { campo.addEventListener('input', controllaSomma); }
+    });
 
     // Quota attesa: solo un'informazione, il conto vero lo rifa' il programma.
     function calcolaTotale() {
@@ -279,7 +346,10 @@
     for (var j = 0; j < spunteAttivita.length; j++) {
       spunteAttivita[j].addEventListener('change', calcolaTotale);
     }
-    if (numero) { numero.addEventListener('input', calcolaTotale); }
+    if (numero) {
+      numero.addEventListener('input', calcolaTotale);
+      numero.addEventListener('input', controllaSomma);
+    }
 
     aggiorna();
 

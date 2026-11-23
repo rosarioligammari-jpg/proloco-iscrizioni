@@ -247,6 +247,20 @@ def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
                 in iscrizione["nomi_partecipanti"].splitlines() if riga.strip()]
         quante = (iscrizione["numero_persone"]
                   if iscrizione["tipo"] == "gruppo" else 1)
+
+        # Il ruolo si stampa solo quando si sa di CHI e': di un gruppo
+        # misto sappiamo quanti guidano, non quale biglietto sia di chi.
+        # In quel caso restano le due caselline da spuntare al cancello.
+        conducenti = iscrizione["conducenti"]
+        passeggeri = iscrizione["passeggeri"]
+        if conducenti is None:
+            ruolo = None
+        elif passeggeri == 0:
+            ruolo = "conducente"
+        elif conducenti == 0:
+            ruolo = "passeggero"
+        else:
+            ruolo = None
         for posizione in range(max(1, quante)):
             numero += 1
             if posizione < len(nomi):
@@ -262,13 +276,15 @@ def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
                 "quante": quante,
                 "posizione": posizione + 1,
                 "codice": iscrizione["codice_conferma"],
+                "ruolo": ruolo,
                 "bianco": False,
             })
 
     for _ in range(quanti_bianchi):
         numero += 1
         voci.append({"numero": numero, "nome": "", "gruppo": "", "quante": 1,
-                     "posizione": 1, "codice": "", "bianco": True})
+                     "posizione": 1, "codice": "", "ruolo": None,
+                     "bianco": True})
     return voci
 
 
@@ -738,6 +754,51 @@ def annulla_iscrizione(numero):
                             numero=iscrizione["manifestazione_id"]))
 
 
+@riservato.route("/iscrizione/<int:numero>/ruoli", methods=["GET", "POST"])
+@serve_entrata
+def ruoli_iscrizione(numero):
+    """Completa «quanti alla guida e quanti passeggeri» su un'iscrizione
+    gia' arrivata.
+
+    Serve per le iscrizioni ricevute prima che la domanda esistesse: il
+    dato si riempie al telefono o al cancello, senza chiedere a nessuno
+    di reiscriversi.
+    """
+    iscrizione = g.con.execute("SELECT * FROM iscrizione WHERE id = ?",
+                               (numero,)).fetchone()
+    if iscrizione is None:
+        abort(404)
+    m = archivio.manifestazione_per_id(g.con, iscrizione["manifestazione_id"])
+    quante = iscrizione["numero_persone"]
+
+    if request.method == "POST":
+        try:
+            conducenti = int(request.form.get("conducenti", ""))
+            passeggeri = int(request.form.get("passeggeri", ""))
+        except ValueError:
+            conducenti = passeggeri = -1
+
+        if conducenti < 0 or passeggeri < 0:
+            flash("Scrivi due numeri, anche zero.", "errore")
+        elif conducenti + passeggeri != quante:
+            flash("Alla guida %d e passeggeri %d fanno %d, ma l'iscrizione è "
+                  "di %d persone." % (conducenti, passeggeri,
+                                      conducenti + passeggeri, quante),
+                  "errore")
+        else:
+            g.con.execute("UPDATE iscrizione SET conducenti = ?, "
+                          "  passeggeri = ? WHERE id = ?",
+                          (conducenti, passeggeri, numero))
+            flash("Salvato: %s %s, %d alla guida e %d passeggeri."
+                  % (iscrizione["nome"], iscrizione["cognome"],
+                     conducenti, passeggeri), "fatto")
+            return redirect(url_for("riservato.manifestazione",
+                                    numero=m["id"]))
+
+    return render_template("riservato/ruoli.html", m=m,
+                           iscrizione=iscrizione, quante=quante)
+
+
 @riservato.route("/iscrizione/<int:numero>/cancella", methods=["GET", "POST"])
 @serve_entrata
 def cancella_iscrizione(numero):
@@ -881,7 +942,8 @@ def esporta(numero):
                            lineterminator="\r\n")
     scrittore.writerow([
         "Codice", "Inviata il", "Stato", "Tipo", "Nome", "Cognome",
-        "Gruppo", "Persone", "Telefono", "Email", "Attività confermate",
+        "Gruppo", "Persone", "Alla guida", "Passeggeri",
+        "Telefono", "Email", "Attività confermate",
         "In lista d'attesa", "Quota attesa (euro)", "Note",
         "Nomi dei partecipanti"])
     for voce in iscrizioni:
@@ -893,6 +955,10 @@ def esporta(numero):
             "gruppo" if iscrizione["tipo"] == "gruppo" else "singolo",
             iscrizione["nome"], iscrizione["cognome"],
             iscrizione["gruppo_nome"], iscrizione["numero_persone"],
+            ("non indicato" if iscrizione["conducenti"] is None
+             else iscrizione["conducenti"]),
+            ("non indicato" if iscrizione["passeggeri"] is None
+             else iscrizione["passeggeri"]),
             iscrizione["telefono"], iscrizione["email"],
             " | ".join(voce["confermate"]),
             " | ".join(voce["in_attesa"]),

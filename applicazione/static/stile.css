@@ -174,6 +174,11 @@ main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
 .campi { display: block; }
 .campi.solo-gruppo { display: none; }
 .campi.solo-gruppo.visibile { display: block; }
+.campi.solo-singolo { display: none; }
+.campi.solo-singolo.visibile { display: block; }
+
+.aiuto.somma-giusta { color: var(--verde); font-weight: 600; }
+.aiuto.somma-sbagliata { color: var(--rosso); font-weight: 600; }
 
 .campo { margin: 0 0 1rem; }
 .campo label { display: block; font-weight: 600; margin-bottom: .3rem; }
@@ -674,8 +679,28 @@ a.collegamento.pericoloso { color: var(--rosso); }
   margin-left: 2mm;
 }
 
-.biglietto-tagliandi {
+.biglietto-ruolo {
   margin-top: auto;
+  font-size: 3mm;
+  color: #000;
+  padding-bottom: 1.2mm;
+}
+
+.casella {
+  display: inline-block;
+  width: 3.4mm;
+  height: 3.4mm;
+  border: .35mm solid #000;
+  vertical-align: -.5mm;
+  margin-right: .6mm;
+  text-align: center;
+  line-height: 3mm;
+  font-size: 2.6mm;
+}
+.casella.segnata { background: #000; color: #fff; }
+
+.biglietto-tagliandi {
+  margin-top: 0;
   display: flex;
   gap: 2mm;
 }

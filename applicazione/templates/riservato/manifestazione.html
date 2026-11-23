@@ -25,6 +25,23 @@
           {{ 'annullata' if totali.annullate == 1 else 'annullate' }}</li>
       {% endif %}
     </ul>
+
+    <ul class="numeri">
+      <li><strong>{{ totali.conducenti }}</strong> alla guida</li>
+      <li><strong>{{ totali.passeggeri }}</strong> passeggeri</li>
+      {% if totali.ruolo_non_indicato %}
+        <li class="attesa"><strong>{{ totali.ruolo_non_indicato }}</strong>
+          non indicato</li>
+      {% endif %}
+    </ul>
+    {% if totali.ruolo_non_indicato %}
+      <p class="aiuto"><strong>Attenzione ai primi due numeri:</strong>
+        {{ totali.ruolo_non_indicato }} persone si sono iscritte prima che
+        il modulo chiedesse chi è alla guida. Finché quel terzo numero non
+        è zero, «alla guida» e «passeggeri» sono parziali e non vanno usati
+        come totali. Si completano uno per uno dall'elenco qui sotto, o al
+        cancello spuntando le caselline sul biglietto.</p>
+    {% endif %}
     <p class="aiuto">«Quante persone» conta una volta sola chi si è iscritto
       a più attività, e non conta chi è soltanto in lista d'attesa.</p>
   </section>
@@ -177,6 +194,15 @@
               {{ i.telefono }}{% if i.email %} · {{ i.email }}{% endif %}
               · codice {{ i.codice_conferma }}
               · inviata il {{ i.creata_il|data_ora_italiana }}
+            </p>
+            <p class="aiuto">
+              {% if i.conducenti is none %}
+                <span class="etichetta arancione">chi è alla guida: non indicato</span>
+                <a href="{{ url_for('riservato.ruoli_iscrizione', numero=i.id) }}">completa</a>
+              {% else %}
+                {{ i.conducenti }} alla guida · {{ i.passeggeri }} passeggeri
+                <a href="{{ url_for('riservato.ruoli_iscrizione', numero=i.id) }}">correggi</a>
+              {% endif %}
             </p>
 
             <ul class="righe-attivita">

@@ -61,6 +61,11 @@ CREATE TABLE IF NOT EXISTS iscrizione (
     nomi_partecipanti  TEXT    NOT NULL DEFAULT '',
     note               TEXT    NOT NULL DEFAULT '',
     consenso_privacy   INTEGER NOT NULL DEFAULT 0,
+    -- Quanti guidano e quanti sono trasportati. NULL (non zero) vuol dire
+    -- «non indicato»: le iscrizioni arrivate prima che la domanda
+    -- esistesse devono restare riconoscibili come tali.
+    conducenti         INTEGER,
+    passeggeri         INTEGER,
     stato              TEXT    NOT NULL DEFAULT 'confermata',
     creata_il          TEXT    NOT NULL
 );
@@ -113,7 +118,12 @@ def connessione():
 # Colonne aggiunte dopo che il programma era gia' in uso. Si aggiungono
 # da sole al primo avvio: nessun dato viene toccato, e un archivio gia'
 # aggiornato non se ne accorge nemmeno.
-COLONNE_AGGIUNTE = ()
+COLONNE_AGGIUNTE = (
+    # Aggiunte il 12/11/2026, a iscrizioni gia' aperte: nascono vuote, e
+    # vuoto vuol dire «non indicato», non «zero».
+    ("iscrizione", "conducenti", "INTEGER"),
+    ("iscrizione", "passeggeri", "INTEGER"),
+)
 
 # Colonne di cose che non si fanno piu'. Si tolgono SOLO se sono vuote
 # dappertutto: nessun dato scritto da qualcuno viene buttato in silenzio
@@ -408,9 +418,25 @@ def totali_manifestazione(con, manifestazione_id):
         "   AND i.stato = 'confermata'",
         (manifestazione_id,)).fetchone()["totale"]
 
+    mezzi = con.execute(
+        "SELECT COALESCE(SUM(conducenti), 0) AS conducenti, "
+        "       COALESCE(SUM(passeggeri), 0) AS passeggeri, "
+        "       COALESCE(SUM(CASE WHEN conducenti IS NULL "
+        "                         THEN numero_persone ELSE 0 END), 0) "
+        "         AS non_indicato "
+        "  FROM iscrizione i "
+        " WHERE i.manifestazione_id = ? AND i.stato = 'confermata' "
+        "   AND EXISTS (SELECT 1 FROM iscrizione_attivita ia "
+        "                WHERE ia.iscrizione_id = i.id "
+        "                  AND ia.stato = 'confermata')",
+        (manifestazione_id,)).fetchone()
+
     return {
         "iscrizioni": riga["iscrizioni"],
         "persone": riga["persone"],
+        "conducenti": mezzi["conducenti"],
+        "passeggeri": mezzi["passeggeri"],
+        "ruolo_non_indicato": mezzi["non_indicato"],
         "iscrizioni_solo_attesa": solo_attesa["iscrizioni"],
         "persone_solo_attesa": solo_attesa["persone"],
         "annullate": annullate,

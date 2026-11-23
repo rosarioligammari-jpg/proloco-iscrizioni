@@ -124,6 +124,13 @@
             {% endif %}
           </div>
 
+          <div class="biglietto-ruolo">
+            <span class="casella {{ 'segnata' if v.ruolo == 'conducente' }}">
+              {{ '&#10003;' | safe if v.ruolo == 'conducente' }}</span> alla guida
+            <span class="casella {{ 'segnata' if v.ruolo == 'passeggero' }}">
+              {{ '&#10003;' | safe if v.ruolo == 'passeggero' }}</span> passeggero
+          </div>
+
           <div class="biglietto-tagliandi">
             {% for tagliando in tagliandi %}
               <span class="tagliando">{{ tagliando }}</span>

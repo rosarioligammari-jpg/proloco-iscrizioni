@@ -111,6 +111,9 @@ def _valori_inviati():
         "accetta_attesa": bool(moduli.get("accetta_attesa")),
         "attivita": moduli.getlist("attivita"),
         "gettone": moduli.get("gettone", "").strip(),
+        "ruolo": moduli.get("ruolo", "").strip(),
+        "conducenti": moduli.get("conducenti", "").strip(),
+        "passeggeri": moduli.get("passeggeri", "").strip(),
         # Campo nascosto: una persona non lo vede e lo lascia vuoto, i
         # programmi automatici lo riempiono. Si chiama «trappola».
         "trappola": moduli.get("sito_web", "").strip(),
@@ -253,12 +256,14 @@ def invia(codice):
             "INSERT INTO iscrizione (manifestazione_id, codice_conferma, "
             "  gettone, tipo, nome, cognome, telefono, email, gruppo_nome, "
             "  numero_persone, nomi_partecipanti, note, consenso_privacy, "
-            "  stato, creata_il) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'confermata', ?)",
+            "  conducenti, passeggeri, stato, creata_il) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, "
+            "        'confermata', ?)",
             (riga["id"], codice_conferma, valori["gettone"] or None,
              valori["tipo"], valori["nome"], valori["cognome"],
              valori["telefono"], valori["email"], valori["gruppo_nome"],
              numero_persone, valori["nomi_partecipanti"], valori["note"],
+             valori.get("conducenti_n"), valori.get("passeggeri_n"),
              archivio.adesso()))
         iscrizione_id = cursore.lastrowid
         for attivita, stato in scelte:
@@ -389,7 +394,47 @@ def _controlla(valori):
                           "manda due iscrizioni o contatta gli "
                           "organizzatori." % MASSIMO_PERSONE_PER_GRUPPO)
             numero_persone = MASSIMO_PERSONE_PER_GRUPPO
-    return errori, max(1, numero_persone)
+    numero_persone = max(1, numero_persone)
+
+    errori.extend(_controlla_i_ruoli(valori, numero_persone))
+    return errori, numero_persone
+
+
+def _controlla_i_ruoli(valori, numero_persone):
+    """Chi guida e chi e' trasportato.
+
+    Serve agli organizzatori per sapere quante moto arrivano. Si scrive
+    in «valori» quello che poi va in archivio: None vuol dire «non
+    indicato», e non deve mai diventare zero per comodita'.
+    """
+    valori["conducenti_n"] = None
+    valori["passeggeri_n"] = None
+
+    if valori["tipo"] != "gruppo":
+        if valori["ruolo"] == "conducente":
+            valori["conducenti_n"], valori["passeggeri_n"] = 1, 0
+        elif valori["ruolo"] == "passeggero":
+            valori["conducenti_n"], valori["passeggeri_n"] = 0, 1
+        else:
+            return ["Indica se sei alla guida o se sei passeggero."]
+        return []
+
+    try:
+        conducenti = int(valori["conducenti"] or -1)
+        passeggeri = int(valori["passeggeri"] or -1)
+    except ValueError:
+        conducenti = passeggeri = -1
+
+    if conducenti < 0 or passeggeri < 0:
+        return ["Indica quanti sono alla guida e quanti sono passeggeri."]
+    if conducenti + passeggeri != numero_persone:
+        return ["Alla guida %d e passeggeri %d fanno %d, ma il gruppo è di "
+                "%d persone: i due numeri insieme devono fare %d."
+                % (conducenti, passeggeri, conducenti + passeggeri,
+                   numero_persone, numero_persone)]
+
+    valori["conducenti_n"], valori["passeggeri_n"] = conducenti, passeggeri
+    return []
 
 
 def _messaggio_pieni(pieni, numero_persone, manifestazione):

@@ -1,0 +1,51 @@
+{% extends "riservato/base.html" %}
+
+{% block titolo %}Alla guida o passeggeri · Area riservata{% endblock %}
+{% block titolo_pagina %}Alla guida o passeggeri{% endblock %}
+
+{% block contenuto_riservato %}
+
+  <section class="scheda">
+    <h2>{{ iscrizione.cognome }} {{ iscrizione.nome }}</h2>
+    <p class="aiuto">
+      {% if iscrizione.gruppo_nome %}{{ iscrizione.gruppo_nome }} · {% endif %}
+      {{ quante|persone }} · telefono {{ iscrizione.telefono }}
+      · codice {{ iscrizione.codice_conferma }}
+    </p>
+
+    <p>Questa iscrizione è arrivata <strong>prima</strong> che il modulo
+      chiedesse chi è alla guida. Completa qui il dato: puoi chiederlo al
+      telefono, oppure riempirlo al cancello il giorno della
+      manifestazione.</p>
+
+    <form method="post">
+      <div class="campi affiancati">
+        <p class="campo">
+          <label for="conducenti">Quanti alla guida</label>
+          <input type="number" id="conducenti" name="conducenti" min="0"
+                 max="{{ quante }}" inputmode="numeric"
+                 value="{{ iscrizione.conducenti if iscrizione.conducenti is not none else '' }}"
+                 autofocus>
+        </p>
+        <p class="campo">
+          <label for="passeggeri">Quanti passeggeri</label>
+          <input type="number" id="passeggeri" name="passeggeri" min="0"
+                 max="{{ quante }}" inputmode="numeric"
+                 value="{{ iscrizione.passeggeri if iscrizione.passeggeri is not none else '' }}">
+        </p>
+      </div>
+      <p class="aiuto">I due numeri insieme devono fare
+        <strong>{{ quante }}</strong>.</p>
+
+      <p class="azioni">
+        <button type="submit" class="pulsante">Salva</button>
+      </p>
+    </form>
+
+    <p class="azioni-in-riga">
+      <a class="pulsante piccolo secondario"
+         href="{{ url_for('riservato.manifestazione', numero=m.id) }}">Torna indietro</a>
+    </p>
+  </section>
+
+{% endblock %}
