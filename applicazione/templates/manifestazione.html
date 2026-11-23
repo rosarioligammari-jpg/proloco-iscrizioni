@@ -145,22 +145,15 @@
         </div>
 
         <div class="campi solo-singolo visibile" id="campi-singolo">
-          <p class="campo">
-            <label>Sei alla guida o passeggero? <span class="obbligatorio">*</span></label>
-            <span class="scelta-tipo">
-              <label class="pastiglia">
-                <input type="radio" name="ruolo" value="conducente"
-                       {% if valori.ruolo == 'conducente' %}checked{% endif %}>
-                <span>Sono alla guida</span>
-              </label>
-              <label class="pastiglia">
-                <input type="radio" name="ruolo" value="passeggero"
-                       {% if valori.ruolo == 'passeggero' %}checked{% endif %}>
-                <span>Sono passeggero</span>
-              </label>
-            </span>
-            <span class="aiuto">Serve agli organizzatori per sapere quanti
-              mezzi arrivano, per il parcheggio e per il giro.</span>
+          <p class="campo spunta">
+            <label>
+              <input type="checkbox" name="sono_passeggero" value="1"
+                     {% if valori.sono_passeggero %}checked{% endif %}>
+              <span><strong>Sono passeggero</strong>, non guido io.
+                <span class="aiuto">Lascia la casella vuota se sei tu alla
+                  guida. Serve agli organizzatori per sapere quanti mezzi
+                  arrivano, per il parcheggio e per il giro.</span></span>
+            </label>
           </p>
         </div>
       </section>

@@ -16,14 +16,27 @@ from applicazione import archivio
 
 class ProvaDomandaNelModulo(ProvaBase):
 
-    def test_chi_si_iscrive_da_solo_deve_dirlo(self):
-        risposta = self.iscrivi(ruolo="")
-        self.assertEqual(risposta.status_code, 400)
-        self.assertIn("alla guida", risposta.get_data(as_text=True))
-        self.assertEqual(self.quante_iscrizioni(), 0)
+    def test_senza_spunta_si_da_per_scontato_che_guidi(self):
+        """Scelta voluta: con la spunta sola, casella vuota vuol dire
+        «guido io». Per un motoraduno e' l'ipotesi giusta, e l'errore va
+        sempre nella stessa direzione."""
+        risposta = self.iscrivi()
+        self.assertEqual(risposta.status_code, 302)
+        con = archivio.connessione()
+        try:
+            riga = con.execute("SELECT conducenti, passeggeri "
+                               "FROM iscrizione").fetchone()
+        finally:
+            con.close()
+        self.assertEqual((riga["conducenti"], riga["passeggeri"]), (1, 0))
+
+    def test_la_spunta_c_e_nel_modulo(self):
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        self.assertIn('name="sono_passeggero"', pagina)
+        self.assertIn("Sono passeggero", pagina)
 
     def test_alla_guida_si_salva(self):
-        self.iscrivi(ruolo="conducente")
+        self.iscrivi()
         con = archivio.connessione()
         try:
             riga = con.execute("SELECT conducenti, passeggeri "
@@ -33,7 +46,7 @@ class ProvaDomandaNelModulo(ProvaBase):
         self.assertEqual((riga["conducenti"], riga["passeggeri"]), (1, 0))
 
     def test_passeggero_si_salva(self):
-        self.iscrivi(ruolo="passeggero")
+        self.iscrivi(sono_passeggero="1")
         con = archivio.connessione()
         try:
             riga = con.execute("SELECT conducenti, passeggeri "
@@ -116,7 +129,7 @@ class ProvaINumeriSonoOnesti(ProvaBase):
         """Tre vecchi e un nuovo alla guida: il totale «alla guida» deve
         essere 1, e i tre devono restare visibili come non indicati."""
         self.vecchia_iscrizione(quante=3)
-        self.iscrivi(ruolo="conducente")
+        self.iscrivi()
         totali = self.totali()
         self.assertEqual(totali["conducenti"], 1)
         self.assertEqual(totali["ruolo_non_indicato"], 3)
@@ -179,7 +192,7 @@ class ProvaRuoloSulBiglietto(ProvaBase):
         self.assertIn("passeggero", pagina)
 
     def test_se_si_sa_chi_e_la_casella_e_gia_segnata(self):
-        self.iscrivi(ruolo="passeggero")
+        self.iscrivi(sono_passeggero="1")
         self.entra()
         self.assertIn("casella segnata", self.stampa())
 
@@ -201,7 +214,7 @@ class ProvaRuoloSulBiglietto(ProvaBase):
 class ProvaEsportazione(ProvaBase):
 
     def test_l_excel_ha_le_due_colonne(self):
-        self.iscrivi(ruolo="conducente")
+        self.iscrivi()
         self.cliente.post("/riservato/entrata",
                           data={"password": "proloco2026",
                                 "ripetuta": "proloco2026"})

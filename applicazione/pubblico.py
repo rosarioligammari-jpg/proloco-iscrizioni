@@ -111,7 +111,7 @@ def _valori_inviati():
         "accetta_attesa": bool(moduli.get("accetta_attesa")),
         "attivita": moduli.getlist("attivita"),
         "gettone": moduli.get("gettone", "").strip(),
-        "ruolo": moduli.get("ruolo", "").strip(),
+        "sono_passeggero": bool(moduli.get("sono_passeggero")),
         "conducenti": moduli.get("conducenti", "").strip(),
         "passeggeri": moduli.get("passeggeri", "").strip(),
         # Campo nascosto: una persona non lo vede e lo lascia vuoto, i
@@ -411,12 +411,17 @@ def _controlla_i_ruoli(valori, numero_persone):
     valori["passeggeri_n"] = None
 
     if valori["tipo"] != "gruppo":
-        if valori["ruolo"] == "conducente":
-            valori["conducenti_n"], valori["passeggeri_n"] = 1, 0
-        elif valori["ruolo"] == "passeggero":
+        # Una spunta sola, e casella vuota vuol dire «guido io».
+        # ATTENZIONE a cosa vuol dire: per chi si iscrive da solo non si
+        # distingue piu' «ho dichiarato di guidare» da «non ho letto la
+        # domanda». E' una scelta voluta, per accorciare il modulo: con un
+        # motoraduno la maggioranza guida, e l'errore va sempre nella
+        # stessa direzione. Per i GRUPPI invece i due numeri restano
+        # obbligatori, perche' li' l'ipotesi non reggerebbe.
+        if valori["sono_passeggero"]:
             valori["conducenti_n"], valori["passeggeri_n"] = 0, 1
         else:
-            return ["Indica se sei alla guida o se sei passeggero."]
+            valori["conducenti_n"], valori["passeggeri_n"] = 1, 0
         return []
 
     try:

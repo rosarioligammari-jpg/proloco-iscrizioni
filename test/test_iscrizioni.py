@@ -79,7 +79,6 @@ class ProvaBase(unittest.TestCase):
             "consenso": "1",
             "attivita": [str(self.pranzo)],
             "gettone": "gettone-%d" % len(cambiamenti),
-            "ruolo": "conducente",
         }
         dati.update(cambiamenti)
         # Chi guida e chi e' trasportato e' obbligatorio: se la prova non
@@ -227,7 +226,7 @@ class ProvaDoppioClic(ProvaBase):
 
     def test_due_invii_con_lo_stesso_gettone_fanno_una_sola_iscrizione(self):
         dati = {"tipo": "singolo", "nome": "Mario", "cognome": "Rossi",
-                "telefono": "333", "consenso": "1", "ruolo": "conducente",
+                "telefono": "333", "consenso": "1",
                 "attivita": [str(self.pranzo)], "gettone": "sempre-uguale"}
         prima = self.cliente.post("/m/festa", data=dati)
         seconda = self.cliente.post("/m/festa", data=dati)
