@@ -186,6 +186,10 @@
               {% elif i.gruppo_nome %}
                 — <span class="etichetta">{{ i.gruppo_nome }}</span>
               {% endif %}
+              {% if i.tipo != 'gruppo' and i.numero_persone > 1 %}
+                <span class="etichetta">con passeggero,
+                  {{ i.numero_persone|persone }}</span>
+              {% endif %}
               {% if i.stato == 'annullata' %}
                 <span class="etichetta arancione">annullata</span>
               {% endif %}

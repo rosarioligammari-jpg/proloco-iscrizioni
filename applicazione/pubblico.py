@@ -111,7 +111,8 @@ def _valori_inviati():
         "accetta_attesa": bool(moduli.get("accetta_attesa")),
         "attivita": moduli.getlist("attivita"),
         "gettone": moduli.get("gettone", "").strip(),
-        "sono_passeggero": bool(moduli.get("sono_passeggero")),
+        "aggiungi_passeggero": bool(moduli.get("aggiungi_passeggero")),
+        "nome_passeggero": moduli.get("nome_passeggero", "").strip(),
         "conducenti": moduli.get("conducenti", "").strip(),
         "passeggeri": moduli.get("passeggeri", "").strip(),
         # Campo nascosto: una persona non lo vede e lo lascia vuoto, i
@@ -250,6 +251,13 @@ def invia(codice):
             con.execute("ROLLBACK")
             return _rimostra(riga, valori, ["Scegli almeno un'attività."])
 
+        # Con il passeggero i nomi diventano due, nell'ordine in cui
+        # escono i biglietti: prima chi guida, poi chi e' trasportato.
+        if valori["tipo"] != "gruppo" and valori["aggiungi_passeggero"]:
+            valori["nomi_partecipanti"] = "%s %s\n%s" % (
+                valori["nome"], valori["cognome"],
+                valori["nome_passeggero"] or "")
+
         codice_conferma = archivio.nuovo_codice_conferma(
             con, LUNGHEZZA_CODICE_CONFERMA)
         cursore = con.execute(
@@ -377,7 +385,9 @@ def _controlla(valori):
     if not valori["attivita"]:
         errori.append("Scegli almeno un'attività.")
 
-    numero_persone = 1
+    # Il passeggero non e' un dettaglio: e' una persona in piu' che
+    # occupa un posto, mangia e paga la quota come tutti.
+    numero_persone = 2 if valori["aggiungi_passeggero"] else 1
     if valori["tipo"] == "gruppo":
         if not valori["gruppo_nome"]:
             errori.append("Manca il nome del gruppo.")
@@ -411,15 +421,12 @@ def _controlla_i_ruoli(valori, numero_persone):
     valori["passeggeri_n"] = None
 
     if valori["tipo"] != "gruppo":
-        # Una spunta sola, e casella vuota vuol dire «guido io».
-        # ATTENZIONE a cosa vuol dire: per chi si iscrive da solo non si
-        # distingue piu' «ho dichiarato di guidare» da «non ho letto la
-        # domanda». E' una scelta voluta, per accorciare il modulo: con un
-        # motoraduno la maggioranza guida, e l'errore va sempre nella
-        # stessa direzione. Per i GRUPPI invece i due numeri restano
-        # obbligatori, perche' li' l'ipotesi non reggerebbe.
-        if valori["sono_passeggero"]:
-            valori["conducenti_n"], valori["passeggeri_n"] = 0, 1
+        # Chi si iscrive da solo guida: se porta qualcuno, sono due
+        # persone, una alla guida e una trasportata. Per i GRUPPI invece
+        # i due numeri si chiedono, perche' li' «quattro persone» puo'
+        # voler dire quattro moto come due moto con due passeggeri.
+        if valori["aggiungi_passeggero"]:
+            valori["conducenti_n"], valori["passeggeri_n"] = 1, 1
         else:
             valori["conducenti_n"], valori["passeggeri_n"] = 1, 0
         return []

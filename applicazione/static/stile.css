@@ -176,6 +176,8 @@ main.contenuto { padding-top: 1.25rem; padding-bottom: 2rem; }
 .campi.solo-gruppo.visibile { display: block; }
 .campi.solo-singolo { display: none; }
 .campi.solo-singolo.visibile { display: block; }
+.campo.solo-con-passeggero { display: none; }
+.campo.solo-con-passeggero.visibile { display: block; }
 
 .aiuto.somma-giusta { color: var(--verde); font-weight: 600; }
 .aiuto.somma-sbagliata { color: var(--rosso); font-weight: 600; }

@@ -147,13 +147,24 @@
         <div class="campi solo-singolo visibile" id="campi-singolo">
           <p class="campo spunta">
             <label>
-              <input type="checkbox" name="sono_passeggero" value="1"
-                     {% if valori.sono_passeggero %}checked{% endif %}>
-              <span><strong>Sono passeggero</strong>, non guido io.
-                <span class="aiuto">Lascia la casella vuota se sei tu alla
-                  guida. Serve agli organizzatori per sapere quanti mezzi
-                  arrivano, per il parcheggio e per il giro.</span></span>
+              <input type="checkbox" name="aggiungi_passeggero" value="1"
+                     id="aggiungi-passeggero"
+                     {% if valori.aggiungi_passeggero %}checked{% endif %}>
+              <span><strong>Porto un passeggero.</strong>
+                <span class="aiuto">Spunta se sulla tua moto sale un'altra
+                  persona: verrà iscritta insieme a te, e conterà come
+                  <strong>due persone</strong> per il posto, il pasto e la
+                  quota.</span></span>
             </label>
+          </p>
+
+          <p class="campo solo-con-passeggero" id="campo-nome-passeggero">
+            <label for="nome_passeggero">Nome del passeggero
+              <span class="facoltativo">(facoltativo)</span></label>
+            <input type="text" id="nome_passeggero" name="nome_passeggero"
+                   value="{{ valori.nome_passeggero|default('') }}">
+            <span class="aiuto">Se lo scrivi, il suo biglietto esce già
+              intestato; se no, al banco si scrive a penna.</span>
           </p>
         </div>
       </section>
@@ -275,6 +286,12 @@
       if (campiGruppo) { campiGruppo.classList.toggle('visibile', gruppo); }
       var campiSingolo = document.getElementById('campi-singolo');
       if (campiSingolo) { campiSingolo.classList.toggle('visibile', !gruppo); }
+      var conPasseggero = document.getElementById('aggiungi-passeggero');
+      var campoNome = document.getElementById('campo-nome-passeggero');
+      if (campoNome) {
+        campoNome.classList.toggle('visibile',
+                                   !gruppo && conPasseggero && conPasseggero.checked);
+      }
       controllaSomma();
       // Il gruppo si puo' indicare sempre, ma per un capogruppo e' dovuto.
       var perGruppo = document.querySelectorAll('.solo-per-gruppo');
@@ -319,7 +336,10 @@
     function calcolaTotale() {
       var spunte = document.querySelectorAll('input[name="attivita"]:checked');
       var gruppo = document.querySelector('input[name="tipo"]:checked').value === 'gruppo';
-      var persone = gruppo && numero ? parseInt(numero.value, 10) || 1 : 1;
+      var conPasseggero = document.getElementById('aggiungi-passeggero');
+      var persone = gruppo && numero
+        ? parseInt(numero.value, 10) || 1
+        : (conPasseggero && conPasseggero.checked ? 2 : 1);
       var centesimi = 0;
       for (var i = 0; i < spunte.length; i++) {
         centesimi += (parseInt(spunte[i].getAttribute('data-quota'), 10) || 0) * persone;
@@ -334,6 +354,9 @@
         riquadro.hidden = true;
       }
     }
+
+    var spuntaPasseggero = document.getElementById('aggiungi-passeggero');
+    if (spuntaPasseggero) { spuntaPasseggero.addEventListener('change', aggiorna); }
 
     var spunteAttivita = document.querySelectorAll('input[name="attivita"]');
     for (var j = 0; j < spunteAttivita.length; j++) {

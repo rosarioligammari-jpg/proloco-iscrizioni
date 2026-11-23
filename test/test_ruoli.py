@@ -16,44 +16,51 @@ from applicazione import archivio
 
 class ProvaDomandaNelModulo(ProvaBase):
 
-    def test_senza_spunta_si_da_per_scontato_che_guidi(self):
-        """Scelta voluta: con la spunta sola, casella vuota vuol dire
-        «guido io». Per un motoraduno e' l'ipotesi giusta, e l'errore va
-        sempre nella stessa direzione."""
-        risposta = self.iscrivi()
-        self.assertEqual(risposta.status_code, 302)
+    def riga_iscrizione(self):
         con = archivio.connessione()
         try:
-            riga = con.execute("SELECT conducenti, passeggeri "
-                               "FROM iscrizione").fetchone()
+            return con.execute(
+                "SELECT numero_persone, conducenti, passeggeri, "
+                "       nomi_partecipanti FROM iscrizione").fetchone()
         finally:
             con.close()
-        self.assertEqual((riga["conducenti"], riga["passeggeri"]), (1, 0))
 
     def test_la_spunta_c_e_nel_modulo(self):
         pagina = self.cliente.get("/m/festa").get_data(as_text=True)
-        self.assertIn('name="sono_passeggero"', pagina)
-        self.assertIn("Sono passeggero", pagina)
+        self.assertIn('name="aggiungi_passeggero"', pagina)
+        self.assertIn("Porto un passeggero", pagina)
 
-    def test_alla_guida_si_salva(self):
+    def test_senza_spunta_e_una_persona_sola_alla_guida(self):
         self.iscrivi()
-        con = archivio.connessione()
-        try:
-            riga = con.execute("SELECT conducenti, passeggeri "
-                               "FROM iscrizione").fetchone()
-        finally:
-            con.close()
+        riga = self.riga_iscrizione()
+        self.assertEqual(riga["numero_persone"], 1)
         self.assertEqual((riga["conducenti"], riga["passeggeri"]), (1, 0))
 
-    def test_passeggero_si_salva(self):
-        self.iscrivi(sono_passeggero="1")
-        con = archivio.connessione()
-        try:
-            riga = con.execute("SELECT conducenti, passeggeri "
-                               "FROM iscrizione").fetchone()
-        finally:
-            con.close()
-        self.assertEqual((riga["conducenti"], riga["passeggeri"]), (0, 1))
+    def test_con_il_passeggero_sono_DUE_persone(self):
+        """La spunta aggiunge una persona vera: occupa un posto, mangia e
+        paga la quota. Se questo numero sbaglia, sbaglia tutto il resto."""
+        self.iscrivi(aggiungi_passeggero="1")
+        riga = self.riga_iscrizione()
+        self.assertEqual(riga["numero_persone"], 2)
+        self.assertEqual((riga["conducenti"], riga["passeggeri"]), (1, 1))
+
+    def test_con_il_passeggero_si_occupano_due_posti(self):
+        self.iscrivi(aggiungi_passeggero="1")
+        self.assertEqual(self.persone_su(self.pranzo), 2)
+        pagina = self.cliente.get("/m/festa").get_data(as_text=True)
+        self.assertIn("posti rimasti: 8 su 10", pagina)
+
+    def test_il_nome_del_passeggero_si_conserva(self):
+        self.iscrivi(aggiungi_passeggero="1", nome_passeggero="Anna Russo")
+        riga = self.riga_iscrizione()
+        nomi = riga["nomi_partecipanti"].splitlines()
+        self.assertEqual(nomi[0], "Mario Rossi")
+        self.assertEqual(nomi[1], "Anna Russo")
+
+    def test_il_passeggero_senza_nome_si_iscrive_lo_stesso(self):
+        risposta = self.iscrivi(aggiungi_passeggero="1")
+        self.assertEqual(risposta.status_code, 302)
+        self.assertEqual(self.riga_iscrizione()["numero_persone"], 2)
 
     def test_un_gruppo_divide_i_suoi(self):
         self.iscrivi(tipo="gruppo", gruppo_nome="Moto Club",
@@ -191,10 +198,15 @@ class ProvaRuoloSulBiglietto(ProvaBase):
         self.assertIn("alla guida", pagina)
         self.assertIn("passeggero", pagina)
 
-    def test_se_si_sa_chi_e_la_casella_e_gia_segnata(self):
-        self.iscrivi(sono_passeggero="1")
+    def test_chi_porta_un_passeggero_fa_due_biglietti_distinti(self):
+        """Qui si sa chi e' chi: il primo biglietto e' di chi guida, il
+        secondo del passeggero. Le caselline escono gia' segnate."""
+        self.iscrivi(aggiungi_passeggero="1", nome_passeggero="Anna Russo")
         self.entra()
-        self.assertIn("casella segnata", self.stampa())
+        pagina = self.stampa()
+        self.assertEqual(pagina.count("casella segnata"), 2)
+        self.assertIn("Mario Rossi", pagina)
+        self.assertIn("Anna Russo", pagina)
 
     def test_in_un_gruppo_misto_le_caselline_restano_vuote(self):
         """Di un gruppo con due alla guida e due passeggeri sappiamo

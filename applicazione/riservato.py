@@ -245,22 +245,28 @@ def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
 
         nomi = [riga.strip() for riga
                 in iscrizione["nomi_partecipanti"].splitlines() if riga.strip()]
-        quante = (iscrizione["numero_persone"]
-                  if iscrizione["tipo"] == "gruppo" else 1)
+        quante = iscrizione["numero_persone"]
 
         # Il ruolo si stampa solo quando si sa di CHI e': di un gruppo
         # misto sappiamo quanti guidano, non quale biglietto sia di chi.
         # In quel caso restano le due caselline da spuntare al cancello.
         conducenti = iscrizione["conducenti"]
         passeggeri = iscrizione["passeggeri"]
-        if conducenti is None:
-            ruolo = None
-        elif passeggeri == 0:
-            ruolo = "conducente"
-        elif conducenti == 0:
-            ruolo = "passeggero"
-        else:
-            ruolo = None
+
+        def ruolo_di(posizione):
+            if conducenti is None:
+                return None
+            if passeggeri == 0:
+                return "conducente"
+            if conducenti == 0:
+                return "passeggero"
+            if iscrizione["tipo"] != "gruppo":
+                # Chi si iscrive da solo con un passeggero: il primo
+                # biglietto e' suo, il secondo del passeggero. Qui si sa.
+                return "conducente" if posizione == 0 else "passeggero"
+            # Gruppo misto: si sa QUANTI guidano, non quale biglietto
+            # sia di chi. Meglio due caselline vuote che un'ipotesi.
+            return None
         for posizione in range(max(1, quante)):
             numero += 1
             if posizione < len(nomi):
@@ -276,7 +282,7 @@ def _elenco_biglietti(con, manifestazione_id, solo_attivita=None,
                 "quante": quante,
                 "posizione": posizione + 1,
                 "codice": iscrizione["codice_conferma"],
-                "ruolo": ruolo,
+                "ruolo": ruolo_di(posizione),
                 "bianco": False,
             })
 

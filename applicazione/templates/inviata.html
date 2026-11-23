@@ -26,6 +26,9 @@
         {% elif iscrizione.gruppo_nome %}
           <br>del gruppo <strong>{{ iscrizione.gruppo_nome }}</strong>
         {% endif %}
+        {% if iscrizione.tipo != 'gruppo' and iscrizione.numero_persone > 1 %}
+          <br>con un passeggero: <strong>{{ iscrizione.numero_persone|persone }}</strong>
+        {% endif %}
       </dd>
 
       <dt>Contatto</dt>
